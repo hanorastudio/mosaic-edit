@@ -1,0 +1,16 @@
+{
+  "name": "Aura Album Studio",
+  "short_name": "AuraStudio",
+  "description": "AI-Powered Automated Photo Album Designer",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#121214",
+  "theme_color": "#C8A96B",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
