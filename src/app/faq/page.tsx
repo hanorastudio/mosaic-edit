@@ -43,7 +43,7 @@ export default function FaqPage() {
           targetText: finalTargetText,
           fontFamily: 'Montserrat, sans-serif',
           textOrientation: 'horizontal',
-          centerDividerEmoji: '❤️',
+          centerDividerEmoji: 'none',
           centerEmojiScale: 0.70,
         },
         {

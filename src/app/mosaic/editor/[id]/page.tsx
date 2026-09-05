@@ -122,7 +122,7 @@ export default function MosaicEditorPage({ params }: MosaicEditorPageProps) {
           targetText: paramText || (targetType === 'number' ? '25' : 'ANANYA'),
           fontFamily: 'Montserrat, sans-serif',
           textOrientation: 'horizontal',
-          centerDividerEmoji: '❤️',
+          centerDividerEmoji: 'none',
           centerEmojiScale: 0.70,
         };
 
@@ -504,7 +504,7 @@ export default function MosaicEditorPage({ params }: MosaicEditorPageProps) {
 
   if (isLoading || !project) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#0C0C0E] text-white">
+      <div className="fixed inset-0 w-full h-[100dvh] flex flex-col items-center justify-center bg-[#0C0C0E] text-white">
         <Loader2 className="w-10 h-10 animate-spin text-[#C8A96B] mb-4" />
         <h2 className="text-base font-semibold font-heading">Synthesizing Photo Mosaic...</h2>
         <p className="text-xs text-zinc-400 mt-1">Analyzing color distributions & shapes</p>
@@ -513,7 +513,7 @@ export default function MosaicEditorPage({ params }: MosaicEditorPageProps) {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#0C0C0E]">
+    <div className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden bg-[#0C0C0E]">
       {/* Top Navigation Toolbar */}
       <MosaicTopToolbar
         project={project}
@@ -533,7 +533,7 @@ export default function MosaicEditorPage({ params }: MosaicEditorPageProps) {
       />
 
       {/* Main Studio Working Canvas & Sidebars */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-hidden relative min-h-0">
         {/* Left Sidebar (Desktop) */}
         <MosaicLeftSidebar
           photos={photos}
@@ -574,7 +574,7 @@ export default function MosaicEditorPage({ params }: MosaicEditorPageProps) {
       </div>
 
       {/* Mobile Bottom Navigation Bar (< 1024px) */}
-      <div className="lg:hidden h-16 bg-[#141417] border-t border-[#2C2C34] flex items-center justify-around px-2 z-30 shrink-0 select-none pb-safe">
+      <div className="lg:hidden h-16 min-h-[64px] bg-[#141417] border-t border-[#2C2C34] flex items-center justify-around px-2 z-30 shrink-0 select-none pb-[env(safe-area-inset-bottom,0px)]">
         {[
           { id: 'photos', label: 'Photos', icon: ImageIcon, count: photos.length },
           { id: 'emojis', label: 'Emojis', icon: Smile },
@@ -588,7 +588,7 @@ export default function MosaicEditorPage({ params }: MosaicEditorPageProps) {
             <button
               key={item.id}
               onClick={() => setMobileSheet(mobileSheet === item.id ? null : item.id)}
-              className={`flex-1 py-1.5 flex flex-col items-center justify-center gap-1 rounded-xl transition-all ${
+              className={`flex-1 py-1.5 flex flex-col items-center justify-center gap-1 rounded-xl transition-all touch-manipulation active:scale-95 ${
                 isActive
                   ? 'text-[#C8A96B] font-bold'
                   : 'text-zinc-400 hover:text-white'

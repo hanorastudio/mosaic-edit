@@ -105,7 +105,7 @@ export default function DashboardPage() {
           targetText: finalTargetText,
           fontFamily: 'Montserrat, sans-serif',
           textOrientation: 'horizontal',
-          centerDividerEmoji: '❤️',
+          centerDividerEmoji: 'none',
           centerEmojiScale: 0.70,
         },
         {

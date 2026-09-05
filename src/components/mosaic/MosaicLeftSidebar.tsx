@@ -265,7 +265,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
           targetText: text,
           fontFamily: target.fontFamily || 'Montserrat, sans-serif',
           textOrientation: target.textOrientation || 'horizontal',
-          centerDividerEmoji: target.centerDividerEmoji || '❤️',
+          centerDividerEmoji: target.centerDividerEmoji || 'none',
           centerEmojiScale: target.centerEmojiScale !== undefined ? target.centerEmojiScale : 0.70,
         });
       }

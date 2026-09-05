@@ -482,7 +482,7 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
       </div>
 
       {/* Floating Magic Loupe & Zoom Controls Bar */}
-      <div className="absolute bottom-20 lg:bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-2xl bg-[#141417]/95 border border-white/15 backdrop-blur-md shadow-2xl max-w-[95vw]">
+      <div className="absolute bottom-3 sm:bottom-4 lg:bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-2xl bg-[#141417]/95 border border-white/15 backdrop-blur-md shadow-2xl max-w-[95vw]">
         {/* Magic Loupe Magnifier Button */}
         <button
           onClick={() => setIsLoupeActive(!isLoupeActive)}

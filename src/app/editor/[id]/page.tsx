@@ -512,7 +512,7 @@ export default function EditorPage({ params }: EditorPageProps) {
 
   if (isLoading || !project) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#141417] text-white space-y-4">
+      <div className="fixed inset-0 w-full h-[100dvh] flex flex-col items-center justify-center bg-[#141417] text-white space-y-4">
         <Loader2 className="w-10 h-10 text-[#C8A96B] animate-spin" />
         <h3 className="text-base font-semibold font-heading">Loading Studio Workspace...</h3>
       </div>
@@ -523,7 +523,7 @@ export default function EditorPage({ params }: EditorPageProps) {
     project.pages[currentPageIndex]?.elements.find((e) => e.id === selectedElementId) || null;
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#121214]">
+    <div className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden bg-[#121214]">
       {/* Top Studio Toolbar */}
       <TopToolbar
         project={project}
