@@ -28,7 +28,7 @@ interface MosaicRightSidebarProps {
   isMobileSheet?: boolean;
 }
 
-export const MosaicRightSidebar: React.FC<MosaicRightSidebarProps> = ({
+const MosaicRightSidebarComponent: React.FC<MosaicRightSidebarProps> = ({
   settings,
   metrics,
   photos,
@@ -71,7 +71,7 @@ export const MosaicRightSidebar: React.FC<MosaicRightSidebarProps> = ({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-6 text-xs">
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6 text-xs pb-28 sm:pb-6">
         {/* Live Mathematical Accuracy Metrics */}
         <div className="p-4 rounded-2xl bg-[#141417] border border-[#C8A96B]/30 space-y-3 shadow-inner">
           <div className="flex items-center justify-between text-[#C8A96B] text-xs font-bold uppercase tracking-wider">
@@ -533,3 +533,5 @@ export const MosaicRightSidebar: React.FC<MosaicRightSidebarProps> = ({
     </div>
   );
 };
+
+export const MosaicRightSidebar = React.memo(MosaicRightSidebarComponent);

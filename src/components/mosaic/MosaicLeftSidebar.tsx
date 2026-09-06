@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   MosaicTargetConfig,
   BuiltInShapeId,
@@ -37,16 +37,34 @@ import {
 
 export const EYE_CATCHING_STYLES = [
   {
+    id: 'romantic-glow',
+    title: '💖 Romantic Couple Glow',
+    desc: 'Deep shadow tones in hair/suits + warm glowing highlights & rich skin tones (Reference 2 & 3)',
+    badge: '👑 Default Style',
+    settings: {
+      colorTintBlend: 0.56,
+      customImageBlendMode: 'studio-hdr' as const,
+      contrastBoost: 1.32,
+      vibrancyBoost: 1.28,
+      brightnessBoost: 1.02,
+      colorMatchingMode: 'full-tonal' as const,
+      outerTileOpacity: 1.0,
+      outerTileFilter: 'none' as const,
+      eyeCatchingPreset: 'romantic-glow' as const,
+    },
+  },
+  {
     id: 'master-studio-vivid',
     title: '⭐ Studio Master Fusion',
     desc: 'Crisp micro photo tiles inside subject + Radiant face & 100% natural vibrant background (Reference 1 & 5)',
-    badge: '👑 Master Look',
+    badge: 'Master Look',
     settings: {
       colorTintBlend: 0.35,
       customImageBlendMode: 'studio-hdr' as const,
       contrastBoost: 1.28,
       vibrancyBoost: 1.25,
       brightnessBoost: 1.02,
+      colorMatchingMode: 'color-match' as const,
       outerTileOpacity: 1.0,
       outerTileFilter: 'none' as const,
       eyeCatchingPreset: 'master-studio-vivid' as const,
@@ -63,25 +81,10 @@ export const EYE_CATCHING_STYLES = [
       contrastBoost: 1.30,
       vibrancyBoost: 1.22,
       brightnessBoost: 1.00,
+      colorMatchingMode: 'color-match' as const,
       outerTileOpacity: 1.0,
       outerTileFilter: 'none' as const,
       eyeCatchingPreset: 'pure-photo' as const,
-    },
-  },
-  {
-    id: 'romantic-glow',
-    title: '💖 Romantic Couple Glow',
-    desc: 'Deep shadow tones in hair/suits + warm glowing highlights & rich skin tones (Reference 2 & 3)',
-    badge: 'Couples',
-    settings: {
-      colorTintBlend: 0.40,
-      customImageBlendMode: 'studio-hdr' as const,
-      contrastBoost: 1.32,
-      vibrancyBoost: 1.28,
-      brightnessBoost: 1.02,
-      outerTileOpacity: 1.0,
-      outerTileFilter: 'none' as const,
-      eyeCatchingPreset: 'romantic-glow' as const,
     },
   },
   {
@@ -95,6 +98,7 @@ export const EYE_CATCHING_STYLES = [
       contrastBoost: 1.24,
       vibrancyBoost: 1.35,
       brightnessBoost: 1.04,
+      colorMatchingMode: 'color-match' as const,
       outerTileOpacity: 1.0,
       outerTileFilter: 'none' as const,
       eyeCatchingPreset: 'vivid-sunshine' as const,
@@ -111,6 +115,7 @@ export const EYE_CATCHING_STYLES = [
       contrastBoost: 1.28,
       vibrancyBoost: 1.25,
       brightnessBoost: 1.02,
+      colorMatchingMode: 'color-match' as const,
       outerTileOpacity: 0.85,
       outerTileFilter: 'monochrome' as const,
       eyeCatchingPreset: 'monochrome-pop' as const,
@@ -127,6 +132,7 @@ export const EYE_CATCHING_STYLES = [
       contrastBoost: 1.15,
       vibrancyBoost: 1.12,
       brightnessBoost: 1.00,
+      colorMatchingMode: 'color-match' as const,
       outerTileOpacity: 1.0,
       outerTileFilter: 'none' as const,
       eyeCatchingPreset: 'classic' as const,
@@ -154,7 +160,7 @@ interface MosaicLeftSidebarProps {
   onExpandMobileSheet?: () => void;
 }
 
-export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
+const MosaicLeftSidebarComponent: React.FC<MosaicLeftSidebarProps> = ({
   photos,
   target,
   settings,
@@ -239,7 +245,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
   ];
 
   // Context-aware Mobile Sub-Tabs (Clean sub-menu per category)
-  const getMobileSubTabs = () => {
+  const mobileSubTabs = useMemo(() => {
     // 1. Names & Art category ('letters' or 'numbers')
     if (mobileActiveTab === 'letters') {
       return [
@@ -288,11 +294,15 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
       { id: 'backgrounds', label: 'Background', icon: Palette },
       { id: 'text', label: 'Text Overlay', icon: AlignJustify },
     ];
-  };
+  }, [mobileActiveTab, photos.length, activeEmojis.length, activeTab]);
 
-  const filteredPhotos = photos.filter((p) =>
-    searchQuery ? p.name.toLowerCase().includes(searchQuery.toLowerCase()) : true
-  );
+  const getMobileSubTabs = () => mobileSubTabs;
+
+  const filteredPhotos = useMemo(() => {
+    return searchQuery
+      ? photos.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      : photos;
+  }, [photos, searchQuery]);
 
   const handleTabClick = (tabId: string) => {
     if (!isMobileSheet && activeTab === tabId && !isCollapsed) {
@@ -341,8 +351,16 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
       }
     } else if (tabId === 'custom') {
       if (target.type !== 'custom-image' && target.type !== 'custom-silhouette') {
-        if (target.customImageUrl) {
-          onUpdateTarget({ type: 'custom-image' });
+        onUpdateTarget({
+          type: 'custom-image',
+          customImageUrl: target.customImageUrl || '/default-custom-pic.png',
+          customImageMode: 'full-color',
+        });
+        if (settings.colorTintBlend === 0.0) {
+          onUpdateSettings({
+            colorTintBlend: 0.35,
+            customImageBlendMode: 'studio-hdr',
+          });
         }
       }
     }
@@ -508,10 +526,12 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
                           customImageMode: 'full-color',
                         });
                         onUpdateSettings({
-                          colorTintBlend: 0.48,
+                          colorTintBlend: 0.56,
                           customImageBlendMode: 'studio-hdr',
-                          contrastBoost: 1.25,
-                          vibrancyBoost: 1.18,
+                          contrastBoost: 1.32,
+                          vibrancyBoost: 1.28,
+                          colorMatchingMode: 'full-tonal',
+                          eyeCatchingPreset: 'romantic-glow',
                         });
                       }
                     }}
@@ -550,7 +570,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
 
               <div className="grid grid-cols-1 gap-1.5">
                 {EYE_CATCHING_STYLES.map((style) => {
-                  const isActive = (settings.eyeCatchingPreset || 'master-studio-vivid') === style.id;
+                  const isActive = (settings.eyeCatchingPreset || 'romantic-glow') === style.id;
                   return (
                     <button
                       key={style.id}
@@ -610,10 +630,10 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
 
               <div className="grid grid-cols-4 gap-1.5 pt-0.5">
                 {[
-                  { label: '20%', val: 0.20, desc: 'High Tiles' },
-                  { label: '35%', val: 0.35, desc: '⭐ Master 35%' },
-                  { label: '50%', val: 0.50, desc: 'Balanced' },
-                  { label: '65%', val: 0.65, desc: 'Face Pop' },
+                  { label: '35%', val: 0.35, desc: 'High Tiles' },
+                  { label: '56%', val: 0.56, desc: '⭐ Default 56%' },
+                  { label: '65%', val: 0.65, desc: 'Balanced' },
+                  { label: '75%', val: 0.75, desc: 'Face Pop' },
                 ].map((preset) => (
                   <button
                     key={preset.label}
@@ -638,7 +658,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
                   <span>🌓 Facial Contrast & Shadow Depth</span>
                 </span>
                 <span className="font-mono text-[#E5C158] px-2 py-0.5 rounded-full bg-[#C8A96B]/20 border border-[#C8A96B]/30">
-                  {Math.round(((settings.contrastBoost ?? 1.25) - 1.0) * 100 + 100)}%
+                  {Math.round(((settings.contrastBoost ?? 1.32) - 1.0) * 100 + 100)}%
                 </span>
               </div>
 
@@ -650,8 +670,8 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
                 type="range"
                 min="1.00"
                 max="1.50"
-                step="0.05"
-                value={settings.contrastBoost ?? 1.25}
+                step="0.02"
+                value={settings.contrastBoost ?? 1.32}
                 onChange={(e) => {
                   const val = parseFloat(e.target.value);
                   onUpdateSettings({ contrastBoost: val });
@@ -662,7 +682,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
               <div className="grid grid-cols-3 gap-1.5 pt-0.5">
                 {[
                   { label: 'Natural', val: 1.05 },
-                  { label: '⭐ Studio Pop', val: 1.25 },
+                  { label: '⭐ 132% Romantic', val: 1.32 },
                   { label: 'Deep Dramatic', val: 1.45 },
                 ].map((c) => (
                   <button
@@ -671,7 +691,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
                       onUpdateSettings({ contrastBoost: c.val });
                     }}
                     className={`p-1.5 rounded-xl border text-center transition-all ${
-                      Math.abs((settings.contrastBoost ?? 1.25) - c.val) < 0.04
+                      Math.abs((settings.contrastBoost ?? 1.32) - c.val) < 0.04
                         ? 'border-[#C8A96B] bg-[#C8A96B]/25 text-white font-bold'
                         : 'border-[#2C2C34] bg-[#18181E] text-zinc-400 hover:text-white'
                     }`}
@@ -689,7 +709,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
                   <span>✨ Color Radiance & Skin Warmth</span>
                 </span>
                 <span className="font-mono text-[#E5C158] px-2 py-0.5 rounded-full bg-[#C8A96B]/20 border border-[#C8A96B]/30">
-                  {Math.round(((settings.vibrancyBoost ?? 1.18) - 1.0) * 100 + 100)}%
+                  {Math.round(((settings.vibrancyBoost ?? 1.28) - 1.0) * 100 + 100)}%
                 </span>
               </div>
 
@@ -701,8 +721,8 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
                 type="range"
                 min="1.00"
                 max="1.60"
-                step="0.05"
-                value={settings.vibrancyBoost ?? 1.18}
+                step="0.02"
+                value={settings.vibrancyBoost ?? 1.28}
                 onChange={(e) => {
                   const val = parseFloat(e.target.value);
                   onUpdateSettings({ vibrancyBoost: val });
@@ -713,7 +733,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
               <div className="grid grid-cols-3 gap-1.5 pt-0.5">
                 {[
                   { label: 'Natural', val: 1.00 },
-                  { label: '⭐ Studio Glow', val: 1.20 },
+                  { label: '⭐ 128% Glow', val: 1.28 },
                   { label: 'Vivid Radiant', val: 1.45 },
                 ].map((v) => (
                   <button
@@ -722,7 +742,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
                       onUpdateSettings({ vibrancyBoost: v.val });
                     }}
                     className={`p-1.5 rounded-xl border text-center transition-all ${
-                      Math.abs((settings.vibrancyBoost ?? 1.18) - v.val) < 0.04
+                      Math.abs((settings.vibrancyBoost ?? 1.28) - v.val) < 0.04
                         ? 'border-[#C8A96B] bg-[#C8A96B]/25 text-white font-bold'
                         : 'border-[#2C2C34] bg-[#18181E] text-zinc-400 hover:text-white'
                     }`}
@@ -889,36 +909,63 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
             </div>
           </div>
         ) : (
-          <div className="border-2 border-dashed border-[#C8A96B]/50 hover:border-[#C8A96B] bg-[#141417] rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-3 cursor-pointer relative transition-colors group">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const url = URL.createObjectURL(file);
-                  onUpdateTarget({
-                    type: 'custom-image',
-                    customImageUrl: url,
-                    customImageMode: 'full-color',
-                  });
-                  onUpdateSettings({
-                    colorTintBlend: 0.48,
-                    customImageBlendMode: 'studio-hdr',
-                    contrastBoost: 1.25,
-                    vibrancyBoost: 1.18,
-                  });
-                }
+          <div className="space-y-3">
+            <div className="border-2 border-dashed border-[#C8A96B]/50 hover:border-[#C8A96B] bg-[#141417] rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-3 cursor-pointer relative transition-colors group">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const url = URL.createObjectURL(file);
+                    onUpdateTarget({
+                      type: 'custom-image',
+                      customImageUrl: url,
+                      customImageMode: 'full-color',
+                    });
+                    onUpdateSettings({
+                      colorTintBlend: 0.56,
+                      customImageBlendMode: 'studio-hdr',
+                      contrastBoost: 1.32,
+                      vibrancyBoost: 1.28,
+                      colorMatchingMode: 'full-tonal',
+                      eyeCatchingPreset: 'romantic-glow',
+                    });
+                  }
+                }}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+              <div className="w-12 h-12 rounded-2xl bg-[#C8A96B]/15 flex items-center justify-center text-[#C8A96B] group-hover:scale-110 transition-transform">
+                <Upload className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-white block">Upload Picture / Portrait</span>
+                <span className="text-[10px] text-zinc-500 mt-0.5 block">Couples, portraits, art, photos</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                onUpdateTarget({
+                  type: 'custom-image',
+                  customImageUrl: '/default-custom-pic.png',
+                  customImageMode: 'full-color',
+                });
+                onUpdateSettings({
+                  colorTintBlend: 0.56,
+                  customImageBlendMode: 'studio-hdr',
+                  contrastBoost: 1.32,
+                  vibrancyBoost: 1.28,
+                  colorMatchingMode: 'full-tonal',
+                  eyeCatchingPreset: 'romantic-glow',
+                });
               }}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-            />
-            <div className="w-12 h-12 rounded-2xl bg-[#C8A96B]/15 flex items-center justify-center text-[#C8A96B] group-hover:scale-110 transition-transform">
-              <Upload className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="text-xs font-bold text-white block">Upload Picture / Portrait</span>
-              <span className="text-[10px] text-zinc-500 mt-0.5 block">Couples, portraits, art, photos</span>
-            </div>
+              className="w-full py-2.5 px-3 rounded-xl bg-[#1A1A20] hover:bg-[#25252E] border border-[#C8A96B]/40 text-[#E5C158] hover:text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-md"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" />
+              <span>Use Default Sample Pic (Pikachu)</span>
+            </button>
           </div>
         )}
       </div>
@@ -2290,7 +2337,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
                 )}
               </div>
 
-              <div className="flex-1 overflow-y-auto p-3 grid grid-cols-3 gap-2">
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-3 pb-28 sm:pb-6 grid grid-cols-3 gap-2">
                 {filteredPhotos.map((p) => (
                   <div
                     key={p.id}
@@ -2356,7 +2403,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
                 {/* Primary Action Button */}
                 <button
                   onClick={() => onApplyEmojis?.(activeEmojis)}
-                  className="w-full py-2.5 px-3 bg-[#C8A96B] hover:bg-[#E5C158] text-black text-xs font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5"
+                  className="w-full py-2.5 px-3 bg-[#C8A96B] hover:bg-[#E5C158] text-black text-xs font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 touch-action-manipulation active:scale-95"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Generate Emoji Mosaic</span>
@@ -2387,7 +2434,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
                           }
                         }
                       }}
-                      className="px-3 py-1.5 bg-[#2C2C34] hover:bg-[#383842] text-[#C8A96B] text-xs font-bold rounded-lg transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 bg-[#2C2C34] hover:bg-[#383842] text-[#C8A96B] text-xs font-bold rounded-lg transition-colors flex items-center gap-1 touch-action-manipulation"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Add</span>
@@ -2397,7 +2444,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
               </div>
 
               {/* Active Emoji Chips & Preset Packs */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4 pb-28 sm:pb-6">
                 {/* Active Selected Emojis Box */}
                 <div className="p-3 rounded-xl bg-[#18181E] border border-[#2C2C34] space-y-2">
                   <div className="flex items-center justify-between text-xs font-semibold">
@@ -2524,7 +2571,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
 
           {/* TAB 2: SHAPES */}
           {activeTab === 'shapes' && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4 pb-28 sm:pb-6">
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-[#FAF8F5]">
                   Target Shape Library
@@ -2539,7 +2586,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
                     <button
                       key={shape.id}
                       onClick={() => onUpdateTarget({ type: 'shape', shapeId: shape.id })}
-                      className={`p-3 rounded-2xl border text-center flex flex-col items-center gap-2 transition-all ${
+                      className={`p-3 rounded-2xl border text-center flex flex-col items-center gap-2 transition-all touch-action-manipulation active:scale-95 ${
                         isSelected
                           ? 'border-[#C8A96B] bg-[#C8A96B]/15 shadow-md shadow-[#C8A96B]/20 text-white'
                           : 'border-[#2C2C34] bg-[#141417] hover:border-[#C8A96B]/50 text-zinc-400 hover:text-white'
@@ -2564,7 +2611,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
 
           {/* TAB 3: LETTERS & NAMES */}
           {activeTab === 'letters' && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-5 pb-28 sm:pb-6">
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-[#FAF8F5]">
                   Letters, Words & Names
@@ -2852,7 +2899,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
 
           {/* TAB 4: NUMBERS */}
           {activeTab === 'numbers' && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-5 pb-28 sm:pb-6">
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-[#FAF8F5]">
                   Number Art
@@ -2984,14 +3031,14 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
 
           {/* TAB 5: CUSTOM IMAGE */}
           {activeTab === 'custom' && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4 pb-28 sm:pb-6">
               {renderCustomPictureControls()}
             </div>
           )}
 
           {/* TAB 6: BACKGROUNDS */}
           {activeTab === 'backgrounds' && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-5 pb-28 sm:pb-6">
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-[#FAF8F5]">
                   Canvas Background
@@ -3171,7 +3218,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
 
           {/* TAB 7: TEXT OVERLAY */}
           {activeTab === 'text' && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4 pb-28 sm:pb-6">
               {renderTextOverlayControls()}
             </div>
           )}
@@ -3180,3 +3227,5 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
     </div>
   );
 };
+
+export const MosaicLeftSidebar = React.memo(MosaicLeftSidebarComponent);

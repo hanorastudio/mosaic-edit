@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { MosaicProject, MosaicTile, MosaicSettings } from '@/types/mosaic';
 import { PhotoMetadata } from '@/types/album';
 import {
@@ -42,7 +42,7 @@ interface MosaicCanvasStageProps {
   onUpdateTarget?: (newTarget: Partial<import('@/types/mosaic').MosaicTargetConfig>) => void;
 }
 
-export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
+const MosaicCanvasStageComponent: React.FC<MosaicCanvasStageProps> = ({
   project,
   photosMap,
   zoomLevel,
@@ -146,6 +146,21 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
     }
   };
 
+  // Text overlay touch start
+  const handleTextTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      e.stopPropagation();
+      const touch = e.touches[0];
+      setIsDraggingText(true);
+      setTextDragStart({
+        mouseX: touch.clientX,
+        mouseY: touch.clientY,
+        initialX: currentTextX,
+        initialY: currentTextY,
+      });
+    }
+  };
+
   // Mouse wheel deep-zoom handler
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -233,7 +248,7 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
   });
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (isDraggingEmoji) return;
+    if (isDraggingEmoji || isDraggingText) return;
 
     if (e.touches.length === 1) {
       const touch = e.touches[0];
@@ -274,6 +289,21 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
       return;
     }
 
+    if (isDraggingText && onUpdateSettings && e.touches.length === 1) {
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - textDragStart.mouseX;
+      const deltaY = touch.clientY - textDragStart.mouseY;
+
+      const scaleWidth = canvasWidth * zoomLevel;
+      const scaleHeight = canvasHeight * zoomLevel;
+
+      const newPctX = Math.max(5, Math.min(95, Number((textDragStart.initialX + (deltaX / scaleWidth) * 100).toFixed(1))));
+      const newPctY = Math.max(5, Math.min(95, Number((textDragStart.initialY + (deltaY / scaleHeight) * 100).toFixed(1))));
+
+      handleUpdateTextCoordinates(newPctX, newPctY);
+      return;
+    }
+
     if (e.touches.length === 1 && isPanning) {
       const touch = e.touches[0];
       const newPanX = touch.clientX - panStart.x;
@@ -307,6 +337,7 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     setIsDraggingEmoji(false);
+    setIsDraggingText(false);
     if (e.touches.length === 0) {
       setIsPanning(false);
       isDraggingRef.current = false;
@@ -348,6 +379,7 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
     setIsEditingText(true);
     setSelectedTile(null);
   };
+
 
   const handleDeleteTextOverlay = () => {
     if (onUpdateSettings) {
@@ -451,6 +483,116 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
   const selectedPhotoMeta = selectedTile ? photosMap.get(selectedTile.photoId) : undefined;
   const hoveredPhotoMeta = hoveredTile ? photosMap.get(hoveredTile.photoId) : undefined;
 
+  const outerTileOpacity =
+    project.settings.outerTileOpacity !== undefined
+      ? project.settings.outerTileOpacity
+      : project.target.outerTileOpacity !== undefined
+      ? project.target.outerTileOpacity
+      : 1.0;
+
+  const outerTileFilter =
+    project.settings.outerTileFilter || project.target.outerTileFilter || 'none';
+
+  const renderedTiles = useMemo(() => {
+    return project.tiles.map((tile) => {
+      const photo = photosMap.get(tile.photoId);
+      const isSelected = selectedTile?.id === tile.id;
+      const isHovered = hoveredTile?.id === tile.id;
+      const isHeroPhoto = project.settings.heroPhotoId === tile.photoId;
+      const isSubjectTile = tile.isSubject !== false;
+
+      const outerFilterStyle =
+        !isSubjectTile && outerTileFilter !== 'none'
+          ? outerTileFilter === 'monochrome'
+            ? 'grayscale(100%) contrast(0.95)'
+            : outerTileFilter === 'soft-blur'
+            ? 'blur(2px)'
+            : outerTileFilter === 'vignette-dim'
+            ? 'brightness(0.60) contrast(1.1)'
+            : undefined
+          : undefined;
+
+      return (
+        <div
+          key={tile.id}
+          onClick={(e) => handleTileClick(e, tile)}
+          onMouseEnter={() => setHoveredTile(tile)}
+          onMouseLeave={() => setHoveredTile(null)}
+          className={`absolute cursor-pointer ${
+            isSelected
+              ? 'ring-2 ring-[#C8A96B] z-30 scale-105 shadow-2xl'
+              : isHovered
+              ? 'ring-1 ring-white/80 z-20 scale-105'
+              : isHeroPhoto
+              ? 'ring-2 ring-[#E5C158] shadow-lg shadow-[#E5C158]/30'
+              : ''
+          }`}
+          style={{
+            left: `${tile.x}%`,
+            top: `${tile.y}%`,
+            width: `${tile.width}%`,
+            height: `${tile.height}%`,
+            padding: 'var(--tile-gap, 0px)',
+            opacity: isSubjectTile ? 1.0 : ('var(--outer-opacity, 1.0)' as any),
+            filter: outerFilterStyle,
+          }}
+        >
+          <div
+            className="w-full h-full relative overflow-hidden bg-zinc-900"
+            style={{
+              borderRadius: 'var(--tile-radius, 0px)',
+            }}
+          >
+            {photo && photo.thumbnail ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={photo.thumbnail}
+                alt={photo.name}
+                className="w-full h-full object-cover pointer-events-none"
+                loading="lazy"
+                decoding="async"
+              />
+            ) : tile.photoId.startsWith('emoji_') ? (
+              <div className="w-full h-full flex items-center justify-center text-xs leading-none select-none pointer-events-none">
+                {decodeURIComponent(tile.photoId.split('_')[1] || '❤️')}
+              </div>
+            ) : (
+              <div
+                className="w-full h-full"
+                style={{
+                  backgroundColor: `rgb(${tile.photoRgb.r}, ${tile.photoRgb.g}, ${tile.photoRgb.b})`,
+                }}
+              />
+            )}
+
+            {/* Per-Tile Photographic Tint & Color Grading (Custom Pictures Subject Only) */}
+            {isCustomImage &&
+              !tile.photoId.startsWith('emoji_') &&
+              project.settings.tileSourceMode !== 'emojis' &&
+              tile.isSubject !== false && (
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    backgroundColor: `rgb(${tile.targetRgb.r}, ${tile.targetRgb.g}, ${tile.targetRgb.b})`,
+                    opacity: 'var(--tint-blend, 0)' as any,
+                  }}
+                />
+              )}
+          </div>
+        </div>
+      );
+    });
+  }, [
+    project.tiles,
+    photosMap,
+    selectedTile?.id,
+    hoveredTile?.id,
+    project.settings.heroPhotoId,
+    project.settings.tileSourceMode,
+    outerTileFilter,
+    isCustomImage,
+  ]);
+
   return (
     <div
       ref={containerRef}
@@ -481,20 +623,36 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
         </span>
       </div>
 
-      {/* Floating Magic Loupe & Zoom Controls Bar */}
-      <div className="absolute bottom-3 sm:bottom-4 lg:bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-2xl bg-[#141417]/95 border border-white/15 backdrop-blur-md shadow-2xl max-w-[95vw]">
-        {/* Magic Loupe Magnifier Button */}
+      {/* Floating Canvas Action Controls Pill */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-2xl bg-[#141417]/95 border border-white/15 backdrop-blur-lg shadow-2xl text-white">
+        <button
+          onClick={() => onZoomChange(Math.max(0.20, Number((zoomLevel - 0.15).toFixed(2))))}
+          className="p-1.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 shrink-0"
+          title="Zoom Out (Scroll wheel or Pinch)"
+        >
+          <ZoomOut className="w-4 h-4" />
+        </button>
+
+        {/* Magic Loupe / Magnifier Toggle */}
         <button
           onClick={() => setIsLoupeActive(!isLoupeActive)}
-          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 ${
+          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
             isLoupeActive
-              ? 'bg-[#C8A96B] text-black font-bold shadow-lg shadow-[#C8A96B]/30'
-              : 'bg-white/5 hover:bg-white/10 text-[#C8A96B]'
+              ? 'bg-[#C8A96B] text-black font-bold shadow-md shadow-[#C8A96B]/30'
+              : 'text-zinc-400 hover:text-white hover:bg-white/10'
           }`}
-          title="Toggle 400% Magic Spyglass Magnifier lens"
+          title="Magic Loupe: Move over canvas to see individual micro photos in high-resolution!"
         >
           <Search className="w-3.5 h-3.5" />
-          <span className="hidden xs:inline">Magic Loupe</span>
+          <span className="hidden sm:inline">Loupe</span>
+        </button>
+
+        <button
+          onClick={() => onZoomChange(Math.min(5.0, Number((zoomLevel + 0.15).toFixed(2))))}
+          className="p-1.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 shrink-0"
+          title="Zoom In (Scroll wheel or Pinch)"
+        >
+          <ZoomIn className="w-4 h-4" />
         </button>
 
         <div className="h-4 w-[1px] bg-white/15 mx-0.5 sm:mx-1 shrink-0" />
@@ -571,6 +729,10 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
           backgroundRepeat: 'no-repeat',
           willChange: 'transform',
           backfaceVisibility: 'hidden',
+          ['--tile-gap' as any]: `${tileGap}px`,
+          ['--tile-radius' as any]: `${borderRadius}px`,
+          ['--outer-opacity' as any]: `${outerTileOpacity}`,
+          ['--tint-blend' as any]: `${Math.min(0.70, tintBlend * 0.95)}`,
         }}
       >
         {/* Empty State when no photos are uploaded */}
@@ -586,108 +748,8 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
           </div>
         )}
 
-        {/* Render Mosaic Tiles */}
-        {(() => {
-          const outerTileOpacity =
-            project.settings.outerTileOpacity !== undefined
-              ? project.settings.outerTileOpacity
-              : project.target.outerTileOpacity !== undefined
-              ? project.target.outerTileOpacity
-              : 1.0;
-
-          const outerTileFilter =
-            project.settings.outerTileFilter || project.target.outerTileFilter || 'none';
-
-          return project.tiles.map((tile) => {
-            const photo = photosMap.get(tile.photoId);
-            const isSelected = selectedTile?.id === tile.id;
-            const isHovered = hoveredTile?.id === tile.id;
-            const isHeroPhoto = project.settings.heroPhotoId === tile.photoId;
-            const isSubjectTile = tile.isSubject !== false;
-            const tileOpacity = isSubjectTile ? 1.0 : outerTileOpacity;
-
-            const outerFilterStyle =
-              !isSubjectTile && outerTileFilter !== 'none'
-                ? outerTileFilter === 'monochrome'
-                  ? 'grayscale(100%) contrast(0.95)'
-                  : outerTileFilter === 'soft-blur'
-                  ? 'blur(2px)'
-                  : outerTileFilter === 'vignette-dim'
-                  ? 'brightness(0.60) contrast(1.1)'
-                  : undefined
-                : undefined;
-
-            return (
-              <div
-                key={tile.id}
-                onClick={(e) => handleTileClick(e, tile)}
-                onMouseEnter={() => setHoveredTile(tile)}
-                onMouseLeave={() => setHoveredTile(null)}
-                className={`absolute cursor-pointer transition-all ${
-                  isSelected
-                    ? 'ring-2 ring-[#C8A96B] z-30 scale-105 shadow-2xl'
-                    : isHovered
-                    ? 'ring-1 ring-white/80 z-20 scale-105'
-                    : isHeroPhoto
-                    ? 'ring-2 ring-[#E5C158] shadow-lg shadow-[#E5C158]/30'
-                    : ''
-                }`}
-                style={{
-                  left: `${tile.x}%`,
-                  top: `${tile.y}%`,
-                  width: `${tile.width}%`,
-                  height: `${tile.height}%`,
-                  padding: `${tileGap}px`,
-                  opacity: tileOpacity,
-                  filter: outerFilterStyle,
-                  transition: 'opacity 0.2s ease, filter 0.2s ease',
-                }}
-              >
-              <div
-                className="w-full h-full relative overflow-hidden bg-zinc-900"
-                style={{
-                  borderRadius: `${borderRadius}px`,
-                }}
-              >
-                {photo && photo.thumbnail ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={photo.thumbnail}
-                    alt={photo.name}
-                    className="w-full h-full object-cover pointer-events-none"
-                    loading="lazy"
-                  />
-                ) : tile.photoId.startsWith('emoji_') ? (
-                  <div className="w-full h-full flex items-center justify-center text-xs leading-none select-none pointer-events-none">
-                    {decodeURIComponent(tile.photoId.split('_')[1] || '❤️')}
-                  </div>
-                ) : (
-                  <div
-                    className="w-full h-full"
-                    style={{
-                      backgroundColor: `rgb(${tile.photoRgb.r}, ${tile.photoRgb.g}, ${tile.photoRgb.b})`,
-                    }}
-                  />
-                )}
-
-                {/* Per-Tile Photographic Tint & Color Grading (Custom Pictures Subject Only - Zero Tint for Standard Shapes) */}
-                {tintBlend > 0 &&
-                  !tile.photoId.startsWith('emoji_') &&
-                  project.settings.tileSourceMode !== 'emojis' &&
-                  isCustomImage &&
-                  tile.isSubject !== false && (
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        backgroundColor: `rgba(${tile.targetRgb.r}, ${tile.targetRgb.g}, ${tile.targetRgb.b}, ${Math.min(0.70, tintBlend * 0.95)})`,
-                      }}
-                    />
-                  )}
-              </div>
-            </div>
-          );
-        });
-      })()}
+        {/* Render Mosaic Tiles (Memoized for 60fps high performance) */}
+        {renderedTiles}
 
         {/* Full / Subject-Aware Photo Overlay for Custom Pictures */}
         {isCustomImage &&
@@ -765,6 +827,7 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
           return (
             <div
               onMouseDown={handleTextMouseDown}
+              onTouchStart={handleTextTouchStart}
               onClick={handleTextOverlayClick}
               className={`absolute group cursor-move flex flex-col items-center justify-center transition-all max-w-[92%] select-none ${
                 glassShape.radiusClass
@@ -1347,3 +1410,5 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
     </div>
   );
 };
+
+export const MosaicCanvasStage = React.memo(MosaicCanvasStageComponent);

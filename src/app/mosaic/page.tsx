@@ -102,18 +102,27 @@ export default function MosaicLandingPage() {
       const sample = await createSampleMosaicPhotoCollection(projectId, 120);
       await savePhotosBatch(sample.photos, sample.blobsMap);
 
+      const isCustom = typeOrShape === 'custom-image' || typeOrShape === 'custom';
       const isText = typeOrShape === 'name' || typeOrShape === 'letter' || (targetText && isNaN(Number(targetText)));
       const isNumber =
         typeOrShape === 'number' ||
         (targetText && !isNaN(Number(targetText)) && typeOrShape !== 'heart' && typeOrShape !== 'star' && typeOrShape !== 'crown');
 
-      const targetType: 'shape' | 'name' | 'number' = isNumber ? 'number' : isText ? 'name' : 'shape';
+      const targetType: 'shape' | 'name' | 'number' | 'custom-image' = isCustom
+        ? 'custom-image'
+        : isNumber
+        ? 'number'
+        : isText
+        ? 'name'
+        : 'shape';
       const shapeId =
         typeOrShape === 'heart' || typeOrShape === 'star' || typeOrShape === 'crown'
           ? typeOrShape
           : 'heart';
-      const finalTargetText = targetText || (targetType === 'number' ? '25' : 'SAKSHI');
+      const finalTargetText = isCustom ? '' : targetText || (targetType === 'number' ? '25' : 'SAKSHI');
       const isTextOrNum = targetType === 'name' || targetType === 'number';
+
+      const customSampleUrl = isCustom ? '/default-custom-pic.png' : undefined;
 
       const mosaic = await createPhotoMosaic(
         sample.analyzedPhotos,
@@ -121,33 +130,48 @@ export default function MosaicLandingPage() {
           type: targetType,
           shapeId: shapeId as any,
           targetText: finalTargetText,
+          customImageUrl: customSampleUrl,
+          customImageMode: isCustom ? 'full-color' : undefined,
           fontFamily: 'Montserrat, sans-serif',
           textOrientation: 'horizontal',
           centerDividerEmoji: 'none',
           centerEmojiScale: 0.70,
         },
         {
-          density: isTextOrNum ? 'ultra' : 'medium',
-          gridCols: isTextOrNum ? 96 : 40,
-          gridRows: isTextOrNum ? 96 : 40,
+          density: isTextOrNum ? 'ultra' : isCustom ? 'high' : 'medium',
+          gridCols: isTextOrNum ? 96 : isCustom ? 60 : 40,
+          gridRows: isTextOrNum ? 96 : isCustom ? 60 : 40,
           tileGap: 0,
           borderRadius: 2,
-          colorMatchingMode: 'color-match',
-          colorTintBlend: 0.0,
+          colorMatchingMode: isCustom ? 'full-tonal' : 'color-match',
+          colorTintBlend: isCustom ? 0.56 : 0.0,
+          contrastBoost: isCustom ? 1.32 : undefined,
+          vibrancyBoost: isCustom ? 1.28 : undefined,
+          eyeCatchingPreset: isCustom ? 'romantic-glow' : undefined,
+          customImageBlendMode: 'studio-hdr',
           useAllPhotosOnce: true,
           allowSmartRepetition: true,
           heroScale: 2,
           background: { type: 'color', value: '#0C0C0E' },
           canvasPreset: '1:1',
           aspectRatio: 1,
-          overlayText: {
-            text: finalTargetText,
-            subtext: 'A Lifetime of Beautiful Memories • 2026',
-            position: 'below',
-            fontFamily: 'Cinzel, serif',
-            color: '#C8A96B',
-            fontSize: 24,
-          },
+          overlayText: isCustom
+            ? {
+                text: 'CUSTOM PICTURE ART',
+                subtext: 'A Lifetime of Beautiful Memories • 2026',
+                position: 'below',
+                fontFamily: 'Cinzel, serif',
+                color: '#C8A96B',
+                fontSize: 24,
+              }
+            : {
+                text: finalTargetText,
+                subtext: 'A Lifetime of Beautiful Memories • 2026',
+                position: 'below',
+                fontFamily: 'Cinzel, serif',
+                color: '#C8A96B',
+                fontSize: 24,
+              },
         }
       );
       mosaic.id = projectId;
@@ -257,11 +281,15 @@ export default function MosaicLandingPage() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-7 text-xs font-medium text-[#9E9E9E]">
-          <Link href="/dashboard" className="hover:text-white transition-colors">
-            My Projects
+          <Link href="/" className="hover:text-white transition-colors">
+            Home
           </Link>
           <button onClick={() => handleLaunchDemo('heart')} className="hover:text-white transition-colors">
             Heart Mosaic
+          </button>
+          <button onClick={() => handleLaunchDemo('custom-image')} className="hover:text-[#E5C158] text-zinc-300 transition-colors flex items-center gap-1.5 font-medium">
+            <Upload className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <span>Custom Pic</span>
           </button>
           <button onClick={() => handleLaunchDemo('name', 'SAKSHI')} className="hover:text-white transition-colors">
             Name Art
@@ -271,6 +299,9 @@ export default function MosaicLandingPage() {
           </button>
           <Link href="/faq" className="hover:text-white transition-colors">
             FAQ
+          </Link>
+          <Link href="/dashboard" className="hover:text-white transition-colors">
+            My Creations
           </Link>
           <Link href="/feature-request" className="text-[#E5C158] hover:text-white transition-colors">
             Feature Request
@@ -318,6 +349,15 @@ export default function MosaicLandingPage() {
           >
             <Heart className="w-4 h-4 fill-current" />
             <span>Create Heart Photo Mosaic</span>
+          </button>
+
+          <button
+            onClick={() => handleLaunchDemo('custom-image')}
+            disabled={isDemoLoading}
+            className="flex items-center gap-2 px-6 py-4 text-sm font-semibold text-white bg-[#1A1A1E] hover:bg-[#25252C] border border-[#C8A96B]/40 rounded-2xl transition-all shadow-lg"
+          >
+            <Upload className="w-4 h-4 text-[#C8A96B]" />
+            <span>Custom Pic Mosaic</span>
           </button>
 
           <button

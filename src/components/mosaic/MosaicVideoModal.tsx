@@ -732,19 +732,19 @@ export const MosaicVideoModal: React.FC<MosaicVideoModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-      <div className="w-full max-w-5xl h-[90vh] bg-[#141417] border border-[#C8A96B]/30 rounded-3xl overflow-hidden shadow-2xl flex flex-col text-white">
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-2 sm:p-6 animate-in fade-in duration-200">
+      <div className="w-full max-w-5xl h-[92dvh] sm:h-[90vh] bg-[#141417] border border-[#C8A96B]/30 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col text-white">
         {/* Header */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between bg-[#1A1A1E]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#C8A96B]/20 border border-[#C8A96B]/40 flex items-center justify-center text-[#C8A96B]">
-              <Video className="w-5 h-5" />
+        <div className="p-3.5 sm:p-5 border-b border-white/10 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 bg-[#1A1A1E] shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-[#C8A96B]/20 border border-[#C8A96B]/40 flex items-center justify-center text-[#C8A96B] shrink-0">
+              <Video className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <h2 className="text-base font-bold font-heading text-white">
-                Direct High-Definition Video Export Studio
+            <div className="min-w-0">
+              <h2 className="text-xs sm:text-base font-bold font-heading text-white truncate">
+                Direct HD Video Export Studio
               </h2>
-              <p className="text-xs text-zinc-400">
+              <p className="text-[10px] sm:text-xs text-zinc-400 hidden xs:block">
                 Direct offline video encoder — renders crystal clear MP4 and WebM videos in seconds.
               </p>
             </div>
@@ -754,16 +754,16 @@ export const MosaicVideoModal: React.FC<MosaicVideoModalProps> = ({
             <button
               onClick={handleDirectExportVideo}
               disabled={isRecording}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C8A96B] hover:bg-[#E5C158] text-black text-xs font-bold transition-colors shadow-lg"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl bg-[#C8A96B] hover:bg-[#E5C158] text-black text-xs font-bold transition-colors shadow-lg touch-action-manipulation active:scale-95"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>
-                {isRecording ? `Encoding Video (${Math.round(recordProgress)}%)...` : `Direct Export ${exportFormat.toUpperCase()}`}
+                {isRecording ? `Encoding (${Math.round(recordProgress)}%)...` : `Direct Export ${exportFormat.toUpperCase()}`}
               </span>
             </button>
             <button
               onClick={onClose}
-              className="p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-white/10"
+              className="p-1.5 sm:p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-white/10 touch-action-manipulation"
             >
               <X className="w-5 h-5" />
             </button>
@@ -771,28 +771,28 @@ export const MosaicVideoModal: React.FC<MosaicVideoModalProps> = ({
         </div>
 
         {/* Main Body */}
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden custom-scrollbar">
           {/* Animated Video Canvas Stage */}
-          <div className="flex-1 bg-gradient-to-b from-[#16141D] to-[#0A090D] relative flex flex-col items-center justify-center p-6 overflow-hidden select-none">
+          <div className="flex-1 min-h-[260px] sm:min-h-0 bg-gradient-to-b from-[#16141D] to-[#0A090D] relative flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden select-none">
             {/* Ambient Backlight Glow */}
-            <div className="absolute w-96 h-96 rounded-full bg-[#C8A96B]/15 blur-[100px] pointer-events-none" />
+            <div className="absolute w-72 sm:w-96 h-72 sm:h-96 rounded-full bg-[#C8A96B]/15 blur-[100px] pointer-events-none" />
 
             {/* Scaled Video Frame Container */}
             <div
-              className="relative rounded-2xl overflow-hidden border-2 border-[#C8A96B]/40 shadow-[0_25px_60px_rgba(0,0,0,0.9)] bg-black flex items-center justify-center"
+              className="relative rounded-2xl overflow-hidden border-2 border-[#C8A96B]/40 shadow-[0_25px_60px_rgba(0,0,0,0.9)] bg-black flex items-center justify-center max-w-[85vw] max-h-[35vh] sm:max-w-none sm:max-h-none"
               style={{
-                width: videoRatio === '9:16' ? '280px' : videoRatio === '16:9' ? '520px' : '420px',
-                height: videoRatio === '9:16' ? '498px' : videoRatio === '16:9' ? '292px' : '420px',
+                width: videoRatio === '9:16' ? '240px' : videoRatio === '16:9' ? '440px' : '340px',
+                height: videoRatio === '9:16' ? '426px' : videoRatio === '16:9' ? '247px' : '340px',
               }}
             >
               <canvas ref={canvasRef} className="w-full h-full object-contain block" />
             </div>
 
             {/* Video Player Floating Timeline Bar */}
-            <div className="w-full max-w-md mt-6 p-2.5 rounded-2xl bg-[#1A1A1E]/95 border border-white/15 flex items-center gap-3 backdrop-blur-md shadow-2xl z-20">
+            <div className="w-full max-w-[90vw] sm:max-w-md mt-3 sm:mt-6 p-2 sm:p-2.5 rounded-2xl bg-[#1A1A1E]/95 border border-white/15 flex items-center gap-2 sm:gap-3 backdrop-blur-md shadow-2xl z-20 shrink-0">
               <button
                 onClick={() => setIsPlaying(!isPlaying)}
-                className="p-2 rounded-xl bg-[#C8A96B] text-black hover:bg-[#E5C158] transition-colors shrink-0 font-bold"
+                className="p-1.5 sm:p-2 rounded-xl bg-[#C8A96B] text-black hover:bg-[#E5C158] transition-colors shrink-0 font-bold touch-action-manipulation"
               >
                 {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
               </button>
@@ -804,7 +804,7 @@ export const MosaicVideoModal: React.FC<MosaicVideoModalProps> = ({
                   startTimeRef.current = Date.now();
                   setIsPlaying(true);
                 }}
-                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-colors shrink-0"
+                className="p-1.5 sm:p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-colors shrink-0 touch-action-manipulation"
                 title="Restart Animation"
               >
                 <RotateCcw className="w-4 h-4" />
@@ -826,20 +826,20 @@ export const MosaicVideoModal: React.FC<MosaicVideoModalProps> = ({
                 className="flex-1 accent-[#C8A96B] cursor-pointer"
               />
 
-              <span className="text-[11px] font-mono text-[#E5C158] font-bold shrink-0">
+              <span className="text-[10px] sm:text-[11px] font-mono text-[#E5C158] font-bold shrink-0">
                 {(progress * videoDuration).toFixed(1)}s / {videoDuration}s
               </span>
             </div>
           </div>
 
           {/* Right Controls Panel */}
-          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-white/10 bg-[#16161A] p-5 space-y-5 overflow-y-auto">
+          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-white/10 bg-[#16161A] p-4 sm:p-5 space-y-4 sm:space-y-5 overflow-y-auto custom-scrollbar pb-safe">
             {/* 1. Animation Mode Selector */}
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               <label className="block text-xs font-semibold text-[#C8A96B] uppercase tracking-wider">
                 Cinematic Animation Style
               </label>
-              <div className="space-y-2">
+              <div className="space-y-1.5 sm:space-y-2">
                 {[
                   {
                     id: 'macro-micro-flight',
@@ -866,7 +866,7 @@ export const MosaicVideoModal: React.FC<MosaicVideoModalProps> = ({
                       startTimeRef.current = Date.now();
                       setIsPlaying(true);
                     }}
-                    className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition-all ${
+                    className={`w-full p-2.5 sm:p-3 rounded-2xl border text-left flex items-center justify-between transition-all touch-action-manipulation active:scale-98 ${
                       animMode === mode.id
                         ? 'border-[#C8A96B] bg-[#C8A96B]/15 text-white font-bold shadow-md'
                         : 'border-[#2C2C34] bg-[#141417] text-zinc-400 hover:border-white/20'
@@ -895,7 +895,7 @@ export const MosaicVideoModal: React.FC<MosaicVideoModalProps> = ({
                   <button
                     key={fmt.id}
                     onClick={() => setExportFormat(fmt.id as any)}
-                    className={`p-2.5 rounded-xl border text-center transition-all ${
+                    className={`p-2 sm:p-2.5 rounded-xl border text-center transition-all touch-action-manipulation active:scale-95 ${
                       exportFormat === fmt.id
                         ? 'border-[#C8A96B] bg-[#C8A96B]/15 text-white font-bold'
                         : 'border-[#2C2C34] bg-[#141417] text-zinc-400 hover:text-white'
@@ -924,7 +924,7 @@ export const MosaicVideoModal: React.FC<MosaicVideoModalProps> = ({
                     <button
                       key={r.id}
                       onClick={() => setVideoRatio(r.id as any)}
-                      className={`p-2.5 rounded-xl border text-center flex flex-col items-center gap-1 text-xs transition-colors ${
+                      className={`p-2 sm:p-2.5 rounded-xl border text-center flex flex-col items-center gap-1 text-xs transition-colors touch-action-manipulation active:scale-95 ${
                         videoRatio === r.id
                           ? 'border-[#C8A96B] bg-[#C8A96B]/15 text-white font-bold'
                           : 'border-[#2C2C34] bg-[#141417] text-zinc-400 hover:text-white'
@@ -958,7 +958,7 @@ export const MosaicVideoModal: React.FC<MosaicVideoModalProps> = ({
                       startTimeRef.current = Date.now();
                       setIsPlaying(true);
                     }}
-                    className={`p-2.5 rounded-xl border text-center text-xs transition-colors ${
+                    className={`p-2 sm:p-2.5 rounded-xl border text-center text-xs transition-colors touch-action-manipulation active:scale-95 ${
                       videoDuration === d.sec
                         ? 'border-[#C8A96B] bg-[#C8A96B]/15 text-white font-bold'
                         : 'border-[#2C2C34] bg-[#141417] text-zinc-400'
@@ -974,7 +974,7 @@ export const MosaicVideoModal: React.FC<MosaicVideoModalProps> = ({
             <button
               onClick={handleDirectExportVideo}
               disabled={isRecording}
-              className="w-full py-3 bg-[#C8A96B] hover:bg-[#E5C158] text-black text-xs font-bold rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
+              className="w-full py-3 bg-[#C8A96B] hover:bg-[#E5C158] text-black text-xs font-bold rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2 touch-action-manipulation active:scale-95"
             >
               <Download className="w-4 h-4" />
               <span>
@@ -987,3 +987,4 @@ export const MosaicVideoModal: React.FC<MosaicVideoModalProps> = ({
     </div>
   );
 };
+

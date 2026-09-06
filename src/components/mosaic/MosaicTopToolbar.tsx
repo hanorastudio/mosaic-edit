@@ -54,12 +54,12 @@ export const MosaicTopToolbar: React.FC<MosaicTopToolbarProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="h-14 border-b border-[#2C2C34] bg-[#141417] px-3 sm:px-4 flex items-center justify-between text-white select-none shrink-0 z-30 relative">
+    <header className="h-14 border-b border-[#2C2C34] bg-[#141417] px-3 sm:px-4 flex items-center justify-between text-white select-none shrink-0 z-30 relative pt-safe">
       {/* Left: Back & Project Title */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <Link
           href="/dashboard"
-          className="p-1.5 sm:p-2 rounded-xl text-[#9E9E9E] hover:text-white hover:bg-[#222228] transition-colors shrink-0"
+          className="p-2 rounded-xl text-[#9E9E9E] hover:text-white hover:bg-[#222228] transition-colors shrink-0 touch-action-manipulation active:scale-95"
           title="Back to Dashboard"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -72,10 +72,10 @@ export const MosaicTopToolbar: React.FC<MosaicTopToolbarProps> = ({
             type="text"
             value={project.name}
             onChange={(e) => onUpdateProjectName(e.target.value)}
-            className="bg-transparent text-xs sm:text-sm font-bold text-[#FAF8F5] focus:bg-[#1A1A1E] focus:outline-none focus:ring-1 focus:ring-[#C8A96B] px-1 py-0.5 rounded transition-all max-w-[120px] sm:max-w-[200px] md:max-w-xs truncate"
+            className="bg-transparent text-xs sm:text-sm font-bold text-[#FAF8F5] focus:bg-[#1A1A1E] focus:outline-none focus:ring-1 focus:ring-[#C8A96B] px-1.5 py-1 rounded transition-all max-w-[130px] sm:max-w-[200px] md:max-w-xs truncate"
             title="Click to rename artwork"
           />
-          <div className="hidden xs:flex items-center gap-1 text-[9px] sm:text-[10px] text-emerald-400 px-1 font-mono">
+          <div className="hidden xs:flex items-center gap-1 text-[9px] sm:text-[10px] text-emerald-400 px-1.5 font-mono">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
             <span className="truncate">{project.tiles.length} tiles</span>
           </div>
@@ -128,16 +128,18 @@ export const MosaicTopToolbar: React.FC<MosaicTopToolbarProps> = ({
           <button
             onClick={onUndo}
             disabled={!canUndo}
-            className="p-1.5 rounded-lg text-[#9E9E9E] hover:text-white disabled:opacity-30"
+            className="p-2 rounded-lg text-[#9E9E9E] hover:text-white disabled:opacity-30 touch-action-manipulation active:scale-90"
+            title="Undo"
           >
-            <Undo2 className="w-3.5 h-3.5" />
+            <Undo2 className="w-4 h-4" />
           </button>
           <button
             onClick={onRedo}
             disabled={!canRedo}
-            className="p-1.5 rounded-lg text-[#9E9E9E] hover:text-white disabled:opacity-30"
+            className="p-2 rounded-lg text-[#9E9E9E] hover:text-white disabled:opacity-30 touch-action-manipulation active:scale-90"
+            title="Redo"
           >
-            <Redo2 className="w-3.5 h-3.5" />
+            <Redo2 className="w-4 h-4" />
           </button>
         </div>
 
@@ -180,7 +182,7 @@ export const MosaicTopToolbar: React.FC<MosaicTopToolbarProps> = ({
         {/* Export Button */}
         <button
           onClick={onOpenExport}
-          className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 text-xs font-bold bg-[#FAF8F5] hover:bg-white text-[#141414] rounded-xl shadow-md transition-colors shrink-0"
+          className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 text-xs font-bold bg-[#FAF8F5] hover:bg-white text-[#141414] rounded-xl shadow-md transition-all shrink-0 touch-action-manipulation active:scale-95"
         >
           <Download className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Export 4K/PDF</span>
@@ -191,7 +193,7 @@ export const MosaicTopToolbar: React.FC<MosaicTopToolbarProps> = ({
         <div className="xl:hidden relative">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`p-2 rounded-xl border transition-all ${
+            className={`p-2 rounded-xl border transition-all touch-action-manipulation active:scale-95 ${
               isMobileMenuOpen
                 ? 'bg-[#C8A96B] text-black border-[#C8A96B]'
                 : 'bg-[#1E1E24] hover:bg-[#2C2C34] border-[#2C2C34] text-zinc-300 hover:text-white'
@@ -206,10 +208,10 @@ export const MosaicTopToolbar: React.FC<MosaicTopToolbarProps> = ({
               {/* Backdrop */}
               <div
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs"
+                className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs"
               />
 
-              <div className="absolute right-0 mt-2 w-64 bg-[#18181E] border border-[#C8A96B]/30 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 flex flex-col gap-1 text-left">
+              <div className="absolute right-0 mt-2 w-64 bg-[#18181E] border border-[#C8A96B]/40 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 flex flex-col gap-1 text-left">
                 <div className="px-3 py-1.5 text-[10px] font-bold text-[#C8A96B] uppercase tracking-wider border-b border-white/10 mb-1">
                   Creative Studios
                 </div>
@@ -219,7 +221,7 @@ export const MosaicTopToolbar: React.FC<MosaicTopToolbarProps> = ({
                     setIsMobileMenuOpen(false);
                     onOpenVideo();
                   }}
-                  className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[#2C2C34] text-left transition-colors group"
+                  className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[#2C2C34] text-left transition-colors group touch-action-manipulation active:scale-98"
                 >
                   <span className="text-lg">🎬</span>
                   <div>
@@ -237,7 +239,7 @@ export const MosaicTopToolbar: React.FC<MosaicTopToolbarProps> = ({
                     setIsMobileMenuOpen(false);
                     onOpenMockup();
                   }}
-                  className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[#2C2C34] text-left transition-colors group"
+                  className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[#2C2C34] text-left transition-colors group touch-action-manipulation active:scale-98"
                 >
                   <span className="text-lg">🖼️</span>
                   <div>
@@ -255,7 +257,7 @@ export const MosaicTopToolbar: React.FC<MosaicTopToolbarProps> = ({
                     setIsMobileMenuOpen(false);
                     onOpenVariations();
                   }}
-                  className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[#2C2C34] text-left transition-colors group"
+                  className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[#2C2C34] text-left transition-colors group touch-action-manipulation active:scale-98"
                 >
                   <span className="text-lg">✨</span>
                   <div>
@@ -273,7 +275,7 @@ export const MosaicTopToolbar: React.FC<MosaicTopToolbarProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-start gap-3 p-2.5 rounded-xl bg-emerald-950/30 hover:bg-emerald-900/40 text-left transition-colors group border border-emerald-500/30"
+                  className="flex items-start gap-3 p-2.5 rounded-xl bg-emerald-950/30 hover:bg-emerald-900/40 text-left transition-colors group border border-emerald-500/30 touch-action-manipulation active:scale-98"
                 >
                   <span className="text-lg">💬</span>
                   <div>
@@ -293,3 +295,4 @@ export const MosaicTopToolbar: React.FC<MosaicTopToolbarProps> = ({
     </header>
   );
 };
+

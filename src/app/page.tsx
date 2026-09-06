@@ -26,12 +26,121 @@ import {
   Star,
   Menu,
   X,
+  Eye,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { createSampleMosaicPhotoCollection } from '@/lib/mosaic/sampleMosaicData';
 import { createPhotoMosaic } from '@/lib/mosaic/mosaicEngine';
 import { savePhotosBatch, saveProject } from '@/lib/db';
 import { generateId } from '@/lib/utils';
+
+interface SampleCreationItem {
+  id: string;
+  title: string;
+  category: string;
+  badge: string;
+  image: string;
+  tilesEstimate: string;
+  description: string;
+  launchType: string;
+  targetText?: string;
+  customImageUrl?: string;
+  centerEmoji?: string;
+  overlayTitle?: string;
+  tag: string;
+}
+
+const APP_SAMPLE_CREATIONS: SampleCreationItem[] = [
+  {
+    id: 'sample-pikachu',
+    title: 'Pikachu Character & Anime Art',
+    category: 'Character & Pop Art',
+    badge: '⚡ Vibrant Pop Silhouette',
+    image: '/samples/sample-pikachu.jpg',
+    tilesEstimate: '7,500+ Photo Tiles',
+    description: 'Electric pop art silhouette crafted with hundreds of color-sorted photos, warm sunny yellow tones, and expressive character outlines.',
+    launchType: 'custom-image',
+    customImageUrl: '/samples/sample-pikachu.jpg',
+    overlayTitle: 'PIKACHU POP ART',
+    tag: 'Character & Pop Art',
+  },
+  {
+    id: 'sample-ganesha',
+    title: 'Lord Ganesha Spiritual Art',
+    category: 'Spiritual & Deity',
+    badge: '👑 Master HDR Blend',
+    image: '/samples/sample-ganesha.jpg',
+    tilesEstimate: '4,500+ Photo Tiles',
+    description: 'Hundreds of family prayer and festival photos harmonized with warm champagne gold lighting and radiant spiritual contours.',
+    launchType: 'custom-image',
+    customImageUrl: '/samples/sample-ganesha.jpg',
+    overlayTitle: 'SHREE GANESHA',
+    tag: 'Custom Pic Art',
+  },
+  {
+    id: 'sample-bride',
+    title: 'Royal Bridal Wedding Portrait',
+    category: 'Wedding & Portrait',
+    badge: '💍 Studio Portrait',
+    image: '/samples/sample-bride-portrait.jpg',
+    tilesEstimate: '6,200+ Photos',
+    description: 'Stunning bridal ceremony portraits woven from hundreds of high-res candid wedding and pre-wedding moments with crystal facial clarity.',
+    launchType: 'custom-image',
+    customImageUrl: '/samples/sample-bride-portrait.jpg',
+    overlayTitle: 'THE ROYAL WEDDING',
+    tag: 'Wedding & Portrait',
+  },
+  {
+    id: 'sample-bunty-babli',
+    title: 'BUNTY ❤️ BABLI Dual Name Art',
+    category: 'Couple & Name Art',
+    badge: '🔤 Ultra Dense Lettering',
+    image: '/samples/sample-bunty-babli.png',
+    tilesEstimate: '8,000+ Photo Tiles',
+    description: 'Two bold names stacked with thousands of micro photos and separated by a glowing 3D center heart emoji.',
+    launchType: 'name',
+    targetText: 'BUNTY BABLI',
+    centerEmoji: '❤️',
+    overlayTitle: 'BUNTY & BABLI',
+    tag: 'Name Art',
+  },
+  {
+    id: 'sample-25-anniversary',
+    title: 'Silver Jubilee "25" Milestone Art',
+    category: 'Milestone Numbers',
+    badge: '🎂 Milestone Art',
+    image: '/samples/sample-25-heart.png',
+    tilesEstimate: '5,000+ Photo Tiles',
+    description: '25 years of memories seamlessly sculpted into giant milestone numbers with vibrant photo tiles and a center heart accent.',
+    launchType: 'number',
+    targetText: '25',
+    centerEmoji: '❤️',
+    overlayTitle: '25 YEARS OF LOVE',
+    tag: 'Number Art',
+  },
+  {
+    id: 'sample-heart',
+    title: 'Classic Pure Romance Heart',
+    category: 'Romantic Shapes',
+    badge: '❤️ Pure Color Match',
+    image: '/samples/sample-heart-shape.jpg',
+    tilesEstimate: '3,800+ Photo Tiles',
+    description: 'Iconic heart silhouette crafted with pure photographic tiles, CIE-LAB Delta-E color sorting, and zero foggy overlay.',
+    launchType: 'heart',
+    overlayTitle: 'ETERNAL LOVE',
+    tag: 'Shape Art',
+  },
+];
+
+const SAMPLE_CATEGORIES = [
+  'All Masterpieces',
+  'Character & Pop Art',
+  'Spiritual & Deity',
+  'Wedding & Portrait',
+  'Couple & Name Art',
+  'Milestone Numbers',
+  'Romantic Shapes',
+];
 
 const HERO_BADGE_PHRASES = [
   { text: 'Hundreds of Photos. One Incredible Picture.', icon: Shield, color: 'text-emerald-400' },
@@ -47,6 +156,8 @@ export default function LandingPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [badgeIndex, setBadgeIndex] = useState<number>(0);
   const [isBadgeFading, setIsBadgeFading] = useState<boolean>(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All Masterpieces');
+  const [selectedLightboxSample, setSelectedLightboxSample] = useState<SampleCreationItem | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -59,25 +170,42 @@ export default function LandingPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleLaunchMosaic = async (typeOrShape: string = 'shape', targetText?: string) => {
+  const handleLaunchMosaic = async (
+    typeOrShape: string = 'shape',
+    targetText?: string,
+    customImg?: string,
+    centerEmoji?: string,
+    overlayTitle?: string
+  ) => {
     setIsDemoLoading(true);
     try {
       const projectId = generateId('mosaic');
       const sample = await createSampleMosaicPhotoCollection(projectId, 120);
       await savePhotosBatch(sample.photos, sample.blobsMap);
 
+      const isCustom = typeOrShape === 'custom-image' || typeOrShape === 'custom' || !!customImg;
       const isText = typeOrShape === 'name' || typeOrShape === 'letter' || (targetText && isNaN(Number(targetText)));
       const isNumber =
         typeOrShape === 'number' ||
         (targetText && !isNaN(Number(targetText)) && typeOrShape !== 'heart' && typeOrShape !== 'star' && typeOrShape !== 'crown');
 
-      const targetType: 'shape' | 'name' | 'number' = isNumber ? 'number' : isText ? 'name' : 'shape';
+      const targetType: 'shape' | 'name' | 'number' | 'custom-image' = isCustom
+        ? 'custom-image'
+        : isNumber
+        ? 'number'
+        : isText
+        ? 'name'
+        : 'shape';
       const shapeId =
         typeOrShape === 'heart' || typeOrShape === 'star' || typeOrShape === 'crown'
           ? typeOrShape
           : 'heart';
-      const finalTargetText = targetText || (targetType === 'number' ? '25' : 'ANANYA');
+      const finalTargetText = isCustom ? '' : targetText || (targetType === 'number' ? '25' : 'ANANYA');
       const isTextOrNum = targetType === 'name' || targetType === 'number';
+
+      const customSampleUrl = isCustom ? (customImg || '/default-custom-pic.png') : undefined;
+      const finalDividerEmoji = centerEmoji || (isTextOrNum && targetText?.includes(' ') ? '❤️' : 'none');
+      const titleForOverlay = overlayTitle || (isCustom ? 'CUSTOM PICTURE ART' : finalTargetText);
 
       const mosaic = await createPhotoMosaic(
         sample.analyzedPhotos,
@@ -85,19 +213,25 @@ export default function LandingPage() {
           type: targetType,
           shapeId: shapeId as any,
           targetText: finalTargetText,
+          customImageUrl: customSampleUrl,
+          customImageMode: isCustom ? 'full-color' : undefined,
           fontFamily: 'Montserrat, sans-serif',
           textOrientation: 'horizontal',
-          centerDividerEmoji: 'none',
+          centerDividerEmoji: finalDividerEmoji as any,
           centerEmojiScale: 0.70,
         },
         {
-          density: isTextOrNum ? 'ultra' : 'medium',
-          gridCols: isTextOrNum ? 96 : 40,
-          gridRows: isTextOrNum ? 96 : 40,
+          density: isTextOrNum ? 'ultra' : isCustom ? 'high' : 'medium',
+          gridCols: isTextOrNum ? 96 : isCustom ? 60 : 40,
+          gridRows: isTextOrNum ? 96 : isCustom ? 60 : 40,
           tileGap: 0,
           borderRadius: 2,
-          colorMatchingMode: 'color-match',
-          colorTintBlend: 0.0,
+          colorMatchingMode: isCustom ? 'full-tonal' : 'color-match',
+          colorTintBlend: isCustom ? 0.56 : 0.0,
+          contrastBoost: isCustom ? 1.32 : undefined,
+          vibrancyBoost: isCustom ? 1.28 : undefined,
+          eyeCatchingPreset: isCustom ? 'romantic-glow' : undefined,
+          customImageBlendMode: 'studio-hdr',
           useAllPhotosOnce: true,
           allowSmartRepetition: true,
           heroScale: 2,
@@ -105,7 +239,7 @@ export default function LandingPage() {
           canvasPreset: '1:1',
           aspectRatio: 1,
           overlayText: {
-            text: finalTargetText,
+            text: titleForOverlay,
             subtext: 'A Lifetime of Beautiful Memories • 2026',
             position: 'below',
             fontFamily: 'Cinzel, serif',
@@ -149,8 +283,16 @@ export default function LandingPage() {
           <Link href="/" className="text-[#C8A96B] font-bold hover:text-white transition-colors">
             Home
           </Link>
+          <a href="#sample-gallery" className="text-[#E5C158] hover:text-white transition-colors font-semibold flex items-center gap-1">
+            <Sparkles className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <span>Sample Gallery</span>
+          </a>
           <button onClick={() => handleLaunchMosaic('heart')} className="hover:text-white transition-colors cursor-pointer">
             Heart Mosaic
+          </button>
+          <button onClick={() => handleLaunchMosaic('custom-image')} className="hover:text-[#E5C158] text-zinc-300 transition-colors cursor-pointer flex items-center gap-1.5 font-medium">
+            <Upload className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <span>Custom Pic</span>
           </button>
           <button onClick={() => handleLaunchMosaic('name', 'ANANYA')} className="hover:text-white transition-colors cursor-pointer">
             Name Art
@@ -206,6 +348,14 @@ export default function LandingPage() {
             >
               Home
             </Link>
+            <a
+              href="#sample-gallery"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-left text-sm font-semibold text-[#E5C158] hover:text-white py-2.5 px-3 rounded-xl bg-[#E5C158]/10 border border-[#E5C158]/20 transition-all active:scale-[0.98] flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 text-[#C8A96B]" />
+              <span>Sample Gallery Masterpieces</span>
+            </a>
             <button
               onClick={() => {
                 setIsMobileMenuOpen(false);
@@ -214,6 +364,16 @@ export default function LandingPage() {
               className="text-left text-sm font-semibold text-[#9E9E9E] hover:text-white py-2.5 px-3 rounded-xl hover:bg-[#1E1E24] transition-all active:scale-[0.98]"
             >
               Heart Mosaic
+            </button>
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                handleLaunchMosaic('custom-image');
+              }}
+              className="text-left text-sm font-semibold text-[#E5C158] hover:text-white py-2.5 px-3 rounded-xl hover:bg-[#1E1E24] transition-all active:scale-[0.98] flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4 text-[#C8A96B]" />
+              <span>Custom Pic Mosaic</span>
             </button>
             <button
               onClick={() => {
@@ -301,9 +461,18 @@ export default function LandingPage() {
           </button>
 
           <button
+            onClick={() => handleLaunchMosaic('custom-image')}
+            disabled={isDemoLoading}
+            className="flex items-center gap-2 px-6 py-4 text-sm font-semibold text-[#E5C158] bg-[#1A1A1E] hover:bg-[#25252C] border border-[#C8A96B]/40 rounded-2xl transition-all shadow-lg transform hover:scale-[1.03]"
+          >
+            <Upload className="w-4 h-4 text-[#C8A96B]" />
+            <span>Custom Pic Mosaic</span>
+          </button>
+
+          <button
             onClick={() => handleLaunchMosaic('name', 'ANANYA')}
             disabled={isDemoLoading}
-            className="flex items-center gap-2 px-6 py-4 text-sm font-semibold text-white bg-[#1A1A1E] hover:bg-[#25252C] border border-[#C8A96B]/40 rounded-2xl transition-all shadow-lg"
+            className="flex items-center gap-2 px-6 py-4 text-sm font-semibold text-white bg-[#1A1A1E] hover:bg-[#25252C] border border-[#C8A96B]/40 rounded-2xl transition-all shadow-lg transform hover:scale-[1.03]"
           >
             <Type className="w-4 h-4 text-[#C8A96B]" />
             <span>Create Name Art (&quot;ANANYA&quot;)</span>
@@ -312,7 +481,7 @@ export default function LandingPage() {
           <button
             onClick={() => handleLaunchMosaic('number', '25')}
             disabled={isDemoLoading}
-            className="flex items-center gap-2 px-6 py-4 text-sm font-semibold text-white bg-[#1A1A1E] hover:bg-[#25252C] border border-[#C8A96B]/40 rounded-2xl transition-all shadow-lg"
+            className="flex items-center gap-2 px-6 py-4 text-sm font-semibold text-white bg-[#1A1A1E] hover:bg-[#25252C] border border-[#C8A96B]/40 rounded-2xl transition-all shadow-lg transform hover:scale-[1.03]"
           >
             <Hash className="w-4 h-4 text-[#E5C158]" />
             <span>Anniversary / Birthday (&quot;25&quot;)</span>
@@ -399,6 +568,125 @@ export default function LandingPage() {
                 ? '🔍 Far Away: Recognizable Heart'
                 : '🔍 Close Up: Individual Photographs'}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Real Mosaic Masterpieces Showcase */}
+      <section id="sample-gallery" className="py-20 px-6 md:px-12 bg-[#0C0C0E] relative scroll-mt-24 border-t border-[#2C2C34]/50">
+        <div className="max-w-6xl mx-auto space-y-12">
+          {/* Section Header */}
+          <div className="text-center space-y-4 max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#1A1A1E] border border-[#C8A96B]/30 text-xs font-semibold text-[#C8A96B] shadow-sm">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Real App Creations Gallery</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-heading text-white tracking-tight leading-tight">
+              Real Mosaic Masterpieces <span className="text-[#C8A96B]">Made by Our App</span>
+            </h2>
+            <p className="text-sm sm:text-base text-[#9E9E9E] leading-relaxed">
+              Explore real high-definition photo mosaics generated directly in the browser. Zoom in to inspect thousands of micro photo tiles or launch the studio editor with 1-click in any style.
+            </p>
+          </div>
+
+          {/* Category Filter Pills */}
+          <div className="flex items-center justify-center flex-wrap gap-2 pt-2">
+            {SAMPLE_CATEGORIES.map((cat) => {
+              const isActive = selectedCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-gradient-to-r from-[#C8A96B] to-[#E5C158] text-[#141414] shadow-md shadow-[#C8A96B]/20 font-bold scale-105'
+                      : 'bg-[#141417] text-[#9E9E9E] hover:text-white border border-[#2C2C34] hover:border-[#C8A96B]/40'
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Gallery Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+            {APP_SAMPLE_CREATIONS.filter(
+              (item) => selectedCategory === 'All Masterpieces' || item.category === selectedCategory
+            ).map((sample) => (
+              <div
+                key={sample.id}
+                className="group rounded-2xl bg-[#141417] border border-[#2C2C34] hover:border-[#C8A96B]/60 transition-all duration-300 overflow-hidden flex flex-col justify-between shadow-xl hover:shadow-2xl hover:shadow-[#C8A96B]/10 transform hover:-translate-y-1"
+              >
+                {/* Image Container with Inspect Overlay */}
+                <div
+                  className="relative aspect-[4/3] w-full overflow-hidden bg-[#0A0A0C] cursor-pointer"
+                  onClick={() => setSelectedLightboxSample(sample)}
+                >
+                  <img
+                    src={sample.image}
+                    alt={sample.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    loading="lazy"
+                  />
+                  {/* Subtle Gradient Vignette */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 pointer-events-none" />
+
+                  {/* Top Badges */}
+                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
+                    <span className="px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md border border-white/10 text-[11px] font-semibold text-[#E5C158]">
+                      {sample.tag}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md border border-white/10 text-[11px] font-mono text-zinc-300 flex items-center gap-1.5">
+                      <Camera className="w-3 h-3 text-[#C8A96B]" />
+                      <span>{sample.tilesEstimate}</span>
+                    </span>
+                  </div>
+
+                  {/* Hover Inspect Prompt */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedLightboxSample(sample);
+                      }}
+                      className="px-4 py-2 rounded-xl bg-white/15 backdrop-blur-md border border-white/30 text-xs font-bold text-white shadow-xl flex items-center gap-2 hover:bg-white/25 transition-all transform scale-95 group-hover:scale-100"
+                    >
+                      <Eye className="w-4 h-4 text-[#E5C158]" />
+                      <span>Inspect 4K View</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Card Content & CTAs */}
+                <div className="p-5 sm:p-6 space-y-4 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#C8A96B]">
+                        {sample.badge}
+                      </span>
+                    </div>
+                    <h3 className="text-base sm:text-lg font-bold font-heading text-white group-hover:text-[#E5C158] transition-colors line-clamp-1">
+                      {sample.title}
+                    </h3>
+                    <p className="text-xs text-[#9E9E9E] leading-relaxed line-clamp-2">
+                      {sample.description}
+                    </p>
+                  </div>
+
+                  {/* Button Actions - Inspect Only */}
+                  <div className="pt-2 border-t border-[#2C2C34]">
+                    <button
+                      onClick={() => setSelectedLightboxSample(sample)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#1A1A1E] hover:bg-[#25252C] border border-[#C8A96B]/30 hover:border-[#C8A96B] text-xs font-semibold text-zinc-200 hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm group-hover:bg-[#C8A96B]/10 active:scale-[0.98]"
+                    >
+                      <Eye className="w-4 h-4 text-[#C8A96B]" />
+                      <span>Inspect Masterpiece</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -561,6 +849,73 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Fullscreen Masterpiece Lightbox Modal */}
+      {selectedLightboxSample && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 md:p-8 animate-in fade-in duration-200"
+          onClick={() => setSelectedLightboxSample(null)}
+        >
+          <div
+            className="relative max-w-5xl w-full max-h-[92vh] bg-[#141417] border border-[#C8A96B]/40 rounded-3xl overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-[#2C2C34] flex items-center justify-between bg-[#1A1A1E]">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-[#C8A96B]/15 text-[#C8A96B] flex items-center justify-center">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold font-heading text-white">
+                    {selectedLightboxSample.title}
+                  </h3>
+                  <div className="flex items-center gap-2 text-xs text-[#9E9E9E]">
+                    <span className="text-[#C8A96B] font-medium">{selectedLightboxSample.tag}</span>
+                    <span>•</span>
+                    <span>{selectedLightboxSample.tilesEstimate}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSelectedLightboxSample(null)}
+                className="p-2 rounded-xl bg-[#141417] hover:bg-[#25252C] border border-[#2C2C34] text-[#9E9E9E] hover:text-white transition-all cursor-pointer"
+                aria-label="Close modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body / Masterpiece Image */}
+            <div className="flex-1 overflow-auto p-4 sm:p-6 flex items-center justify-center bg-[#0C0C0E]">
+              <div className="relative max-w-full max-h-[60vh] rounded-2xl overflow-hidden shadow-2xl border border-white/10 group">
+                <img
+                  src={selectedLightboxSample.image}
+                  alt={selectedLightboxSample.title}
+                  className="max-h-[60vh] w-auto object-contain select-none"
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer / Description & CTA */}
+            <div className="p-5 sm:p-6 border-t border-[#2C2C34] bg-[#141417] flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-xs sm:text-sm text-[#9E9E9E] max-w-xl text-center sm:text-left leading-relaxed">
+                {selectedLightboxSample.description}
+              </p>
+
+              <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
+                <button
+                  onClick={() => setSelectedLightboxSample(null)}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#1A1A1E] hover:bg-[#25252C] border border-[#C8A96B]/40 hover:border-[#C8A96B] text-xs font-semibold text-white transition-all cursor-pointer text-center shadow-md active:scale-95"
+                >
+                  Close Masterpiece View
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Luxury Footer with Hanora Studio Embed */}
       <Footer />

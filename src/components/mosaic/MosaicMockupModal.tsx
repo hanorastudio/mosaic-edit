@@ -635,18 +635,18 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-2 sm:p-6 animate-in fade-in duration-200">
-      <div className="w-full max-w-5xl h-[92vh] sm:h-[90vh] bg-[#141417] border border-[#C8A96B]/30 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col text-white">
+      <div className="w-full max-w-5xl h-[92dvh] sm:h-[90vh] bg-[#141417] border border-[#C8A96B]/30 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col text-white">
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-white/10 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 bg-[#1A1A1E]">
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#C8A96B]/20 border border-[#C8A96B]/40 flex items-center justify-center text-[#C8A96B] shrink-0">
+        <div className="p-3.5 sm:p-5 border-b border-white/10 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 bg-[#1A1A1E] shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-[#C8A96B]/20 border border-[#C8A96B]/40 flex items-center justify-center text-[#C8A96B] shrink-0">
               <Frame className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <h2 className="text-sm sm:text-base font-bold font-heading text-white">
+            <div className="min-w-0">
+              <h2 className="text-xs sm:text-base font-bold font-heading text-white truncate">
                 3D Wall Art & Interior Mockup
               </h2>
-              <p className="text-[11px] sm:text-xs text-zinc-400 hidden xs:block">
+              <p className="text-[10px] sm:text-xs text-zinc-400 hidden xs:block">
                 Visualize and download in 4K Ultra-HD with luxury frames.
               </p>
             </div>
@@ -657,7 +657,7 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
             <button
               onClick={() => handleExportFramed('framed-only')}
               disabled={isExporting}
-              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl bg-[#C8A96B] hover:bg-[#E5C158] text-black text-xs font-bold transition-colors shadow-lg"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl bg-[#C8A96B] hover:bg-[#E5C158] text-black text-xs font-bold transition-colors shadow-lg touch-action-manipulation active:scale-95"
               title="Download high-resolution 4K framed artwork"
             >
               <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -667,7 +667,7 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
             <button
               onClick={() => handleExportFramed('room-scene')}
               disabled={isExporting}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#222228] hover:bg-[#2C2C34] border border-white/10 text-xs font-semibold text-zinc-300 hover:text-white transition-colors"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#222228] hover:bg-[#2C2C34] border border-white/10 text-xs font-semibold text-zinc-300 hover:text-white transition-colors touch-action-manipulation"
               title="Download full 4K room interior scene"
             >
               <span>Room Scene</span>
@@ -675,7 +675,7 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-1.5 sm:p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-white/10"
+              className="p-1.5 sm:p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-white/10 touch-action-manipulation"
             >
               <X className="w-5 h-5" />
             </button>
@@ -683,11 +683,11 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
         </div>
 
         {/* Main Split Body: Interactive Viewport + Frame/Room Selectors */}
-        <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden custom-scrollbar">
           {/* 3D Interior Mockup Stage */}
           <div
             ref={containerRef}
-            className="flex-1 relative flex flex-col items-center justify-center p-8 overflow-hidden select-none"
+            className="flex-1 min-h-[260px] sm:min-h-0 relative flex flex-col items-center justify-center p-4 sm:p-8 overflow-hidden select-none"
             style={{
               background: currentRoom.wallBg,
             }}
@@ -700,12 +700,12 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
 
             {/* Framed Artwork Container with 100% COMPLETE Mosaic */}
             <div
-              className={`relative transition-all duration-300 transform hover:scale-[1.01] ${currentFrame.frameBorder}`}
+              className={`relative transition-all duration-300 transform hover:scale-[1.01] max-w-[85vw] max-h-[38vh] sm:max-w-none sm:max-h-none ${currentFrame.frameBorder}`}
               style={{
-                width: aspectRatio >= 1 ? '400px' : `${400 * aspectRatio}px`,
-                height: aspectRatio >= 1 ? `${400 / aspectRatio}px` : '400px',
+                width: aspectRatio >= 1 ? '360px' : `${360 * aspectRatio}px`,
+                height: aspectRatio >= 1 ? `${360 / aspectRatio}px` : '360px',
                 backgroundColor: hasMatBoard ? '#FAF8F5' : '#141417',
-                padding: hasMatBoard ? '28px' : '0px',
+                padding: hasMatBoard ? '22px' : '0px',
               }}
             >
               {/* Mat Board Bevel & Inner Canvas Container */}
@@ -725,12 +725,12 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
             {/* Interior Mid-Century Credenza / Shelf Silhouette */}
             {selectedRoom !== 'custom' && (
               <div
-                className="w-80 h-10 mt-12 rounded-t-xl border-t border-white/10 shadow-2xl relative"
+                className="w-64 sm:w-80 h-8 sm:h-10 mt-6 sm:mt-12 rounded-t-xl border-t border-white/10 shadow-2xl relative shrink-0"
                 style={{ backgroundColor: currentRoom.accentFurniture }}
               >
                 {/* Small Designer Plant / Lamp Accent Silhouette */}
-                <div className="absolute -top-6 left-6 w-5 h-6 rounded-t-full bg-emerald-900/50 border border-emerald-500/20" />
-                <div className="absolute -top-3 right-10 w-8 h-3 rounded bg-amber-900/40 border border-amber-600/20" />
+                <div className="absolute -top-5 sm:-top-6 left-6 w-4 sm:w-5 h-5 sm:h-6 rounded-t-full bg-emerald-900/50 border border-emerald-500/20" />
+                <div className="absolute -top-2.5 sm:-top-3 right-10 w-7 sm:w-8 h-2.5 sm:h-3 rounded bg-amber-900/40 border border-amber-600/20" />
               </div>
             )}
 
@@ -741,13 +741,13 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
           </div>
 
           {/* Right Controls Panel */}
-          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-white/10 bg-[#16161A] p-5 space-y-5 overflow-y-auto">
+          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-white/10 bg-[#16161A] p-4 sm:p-5 space-y-4 sm:space-y-5 overflow-y-auto custom-scrollbar pb-safe">
             {/* 1. Frame Style Selector */}
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               <label className="block text-xs font-semibold text-[#C8A96B] uppercase tracking-wider">
                 Luxury Frame Style
               </label>
-              <div className="space-y-2">
+              <div className="space-y-1.5 sm:space-y-2">
                 {(
                   [
                     { id: 'gold', name: 'Royal Gold Ornate', desc: 'Hand-leafed champagne gold', color: '#C8A96B' },
@@ -760,7 +760,7 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
                   <button
                     key={f.id}
                     onClick={() => setSelectedFrame(f.id)}
-                    className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition-all ${
+                    className={`w-full p-2.5 sm:p-3 rounded-2xl border text-left flex items-center justify-between transition-all touch-action-manipulation active:scale-98 ${
                       selectedFrame === f.id
                         ? 'border-[#C8A96B] bg-[#C8A96B]/15 text-white font-bold shadow-md'
                         : 'border-[#2C2C34] bg-[#141417] text-zinc-400 hover:border-white/20'
@@ -783,14 +783,14 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
             </div>
 
             {/* 2. Room Environment Selector + Custom Room Upload */}
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-semibold text-[#C8A96B] uppercase tracking-wider">
                   Room Interior
                 </label>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-[11px] text-[#C8A96B] hover:underline flex items-center gap-1"
+                  className="text-[11px] text-[#C8A96B] hover:underline flex items-center gap-1 touch-action-manipulation"
                 >
                   <Upload className="w-3 h-3" />
                   <span>Upload Wall Photo</span>
@@ -815,7 +815,7 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
                   <button
                     key={r.id}
                     onClick={() => setSelectedRoom(r.id as any)}
-                    className={`p-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                    className={`p-2 sm:p-2.5 rounded-xl border text-xs font-semibold transition-all touch-action-manipulation active:scale-95 ${
                       selectedRoom === r.id
                         ? 'border-[#C8A96B] bg-[#C8A96B]/15 text-white'
                         : 'border-[#2C2C34] bg-[#141417] text-zinc-400 hover:text-white'
@@ -828,7 +828,7 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
             </div>
 
             {/* 3. Mat Board Toggle */}
-            <label className="flex items-center justify-between p-3.5 rounded-2xl bg-[#141417] border border-[#2C2C34] text-xs cursor-pointer hover:border-white/20">
+            <label className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#141417] border border-[#2C2C34] text-xs cursor-pointer hover:border-white/20 touch-action-manipulation">
               <span className="font-semibold text-white">Museum Mat Board Border</span>
               <input
                 type="checkbox"
@@ -839,12 +839,12 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
             </label>
 
             {/* Direct Download Actions in Sidebar */}
-            <div className="p-4 rounded-2xl bg-[#C8A96B]/10 border border-[#C8A96B]/30 space-y-2">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-[#C8A96B]/10 border border-[#C8A96B]/30 space-y-2">
               <span className="text-xs font-bold text-[#E5C158] block">High-Resolution 4K Export</span>
               <button
                 onClick={() => handleExportFramed('framed-only')}
                 disabled={isExporting}
-                className="w-full py-2.5 px-3 bg-[#C8A96B] hover:bg-[#E5C158] text-black text-xs font-bold rounded-xl transition-colors shadow-md flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 px-3 bg-[#C8A96B] hover:bg-[#E5C158] text-black text-xs font-bold rounded-xl transition-colors shadow-md flex items-center justify-center gap-1.5 touch-action-manipulation active:scale-95"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>{isExporting ? (exportProgress || 'Generating 4K PNG...') : 'Download 4K Framed PNG'}</span>
@@ -852,7 +852,7 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
               <button
                 onClick={() => handleExportFramed('room-scene')}
                 disabled={isExporting}
-                className="w-full py-2 px-3 bg-[#1A1A1E] hover:bg-[#2C2C34] border border-white/15 text-white text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-1.5"
+                className="w-full py-2 px-3 bg-[#1A1A1E] hover:bg-[#2C2C34] border border-white/15 text-white text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-1.5 touch-action-manipulation active:scale-95"
               >
                 <ImageIcon className="w-3.5 h-3.5" />
                 <span>Download 4K Room Scene</span>
@@ -864,3 +864,4 @@ export const MosaicMockupModal: React.FC<MosaicMockupModalProps> = ({
     </div>
   );
 };
+

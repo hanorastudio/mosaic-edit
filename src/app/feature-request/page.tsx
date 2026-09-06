@@ -17,6 +17,7 @@ import {
   ExternalLink,
   Menu,
   X,
+  Upload,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 
@@ -94,13 +95,17 @@ export default function FeatureRequestPage() {
           <Link href="/" className="hover:text-white transition-colors">
             Home
           </Link>
-          <Link href="/mosaic" className="hover:text-white transition-colors">
+          <Link href="/mosaic?type=heart" className="hover:text-white transition-colors">
             Heart Mosaic
           </Link>
-          <Link href="/mosaic" className="hover:text-white transition-colors">
+          <Link href="/mosaic?type=custom-image" className="hover:text-[#E5C158] text-zinc-300 transition-colors flex items-center gap-1.5 font-medium">
+            <Upload className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <span>Custom Pic</span>
+          </Link>
+          <Link href="/mosaic?type=name" className="hover:text-white transition-colors">
             Name Art
           </Link>
-          <Link href="/mosaic" className="hover:text-white transition-colors">
+          <Link href="/mosaic?type=number" className="hover:text-white transition-colors">
             Number Art
           </Link>
           <Link href="/faq" className="hover:text-white transition-colors">
@@ -152,21 +157,29 @@ export default function FeatureRequestPage() {
               Home
             </Link>
             <Link
-              href="/mosaic"
+              href="/mosaic?type=heart"
               onClick={() => setIsMobileMenuOpen(false)}
               className="text-sm font-semibold text-[#9E9E9E] hover:text-white py-2.5 px-3 rounded-xl hover:bg-[#1E1E24] transition-all active:scale-[0.98]"
             >
               Heart Mosaic
             </Link>
             <Link
-              href="/mosaic"
+              href="/mosaic?type=custom-image"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-sm font-semibold text-[#E5C158] hover:text-white py-2.5 px-3 rounded-xl hover:bg-[#1E1E24] transition-all active:scale-[0.98] flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4 text-[#C8A96B]" />
+              <span>Custom Pic Mosaic</span>
+            </Link>
+            <Link
+              href="/mosaic?type=name"
               onClick={() => setIsMobileMenuOpen(false)}
               className="text-sm font-semibold text-[#9E9E9E] hover:text-white py-2.5 px-3 rounded-xl hover:bg-[#1E1E24] transition-all active:scale-[0.98]"
             >
               Name Art
             </Link>
             <Link
-              href="/mosaic"
+              href="/mosaic?type=number"
               onClick={() => setIsMobileMenuOpen(false)}
               className="text-sm font-semibold text-[#9E9E9E] hover:text-white py-2.5 px-3 rounded-xl hover:bg-[#1E1E24] transition-all active:scale-[0.98]"
             >

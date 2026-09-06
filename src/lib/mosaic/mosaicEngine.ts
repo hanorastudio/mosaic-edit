@@ -485,24 +485,59 @@ export async function createPhotoMosaic(
       let score = calculateMatchDistance(photo, slot.targetLab, matchMode);
 
       if (!isUnique1to1) {
-        // 1. GLOBAL MAXIMUM DISTANCE REPULSION
-        const placements = photoPlacements.get(photo.id) || [];
-        if (placements.length > 0) {
-          let globalMinDist = Infinity;
-          for (let k = 0; k < placements.length; k++) {
-            const d = Math.hypot(slot.r - placements[k].r, slot.c - placements[k].c);
-            if (d < globalMinDist) globalMinDist = d;
+        // 1. FAST LOCAL & GLOBAL REPEL FILTER
+        const placements = photoPlacements.get(photo.id);
+        if (placements && placements.length > 0) {
+          let hasImmediateNeighbor = false;
+          let hasNearbyNeighbor = false;
+          const minR = Math.max(0, slot.r - 2);
+          const maxR = Math.min(gridRows - 1, slot.r + 2);
+          const minC = Math.max(0, slot.c - 2);
+          const maxC = Math.min(gridCols - 1, slot.c + 2);
+
+          for (let nr = minR; nr <= maxR; nr++) {
+            for (let nc = minC; nc <= maxC; nc++) {
+              if (gridAssignments[nr][nc] === photo.id) {
+                const dr = slot.r - nr;
+                const dc = slot.c - nc;
+                const distSq = dr * dr + dc * dc;
+                if (distSq <= 2.25) {
+                  hasImmediateNeighbor = true;
+                  break;
+                } else if (distSq <= 6.25) {
+                  hasNearbyNeighbor = true;
+                }
+              }
+            }
+            if (hasImmediateNeighbor) break;
           }
 
-          if (globalMinDist <= 1.5) {
-            // Immediate 8-neighbor (distance 1.0 or 1.414 diagonal): ABSOLUTE HARD BARRIER
+          if (hasImmediateNeighbor) {
             score += 10000000;
-          } else if (globalMinDist <= 2.5) {
-            // 2 cells away: EXTREME REPULSION
-            score += 1000000 / (globalMinDist * globalMinDist);
-          } else if (globalMinDist < idealSeparation) {
-            // Within ideal separation: inverse-square repulsive field
-            score += (250000 / (globalMinDist * globalMinDist)) * (idealSeparation / globalMinDist);
+          } else if (hasNearbyNeighbor) {
+            score += 400000;
+          } else {
+            const startK = Math.max(0, placements.length - 8);
+            const idealSepSq = idealSeparation * idealSeparation;
+            let minDistSq = Infinity;
+
+            for (let k = startK; k < placements.length; k++) {
+              const p = placements[k];
+              const dr = Math.abs(slot.r - p.r);
+              if (dr >= idealSeparation) continue;
+              const dc = Math.abs(slot.c - p.c);
+              if (dc >= idealSeparation) continue;
+
+              const distSq = dr * dr + dc * dc;
+              if (distSq < minDistSq) {
+                minDistSq = distSq;
+              }
+            }
+
+            if (minDistSq < idealSepSq) {
+              const d = Math.sqrt(minDistSq);
+              score += (250000 / minDistSq) * (idealSeparation / Math.max(1, d));
+            }
           }
         }
 

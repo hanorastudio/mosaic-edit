@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, use } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   MosaicProject,
@@ -143,11 +143,14 @@ export default function MosaicEditorPage({ params }: MosaicEditorPageProps) {
         }
 
         const isTextOrNumber = targetType === 'name' || targetType === 'letter' || targetType === 'number';
+        const isCustom = targetType === 'custom-image';
 
         const defaultTarget: MosaicTargetConfig = {
           type: targetType,
           shapeId: (paramShape as any) || 'heart',
           targetText: paramText || (targetType === 'number' ? '25' : 'ANANYA'),
+          customImageUrl: isCustom ? '/default-custom-pic.png' : undefined,
+          customImageMode: isCustom ? 'full-color' : undefined,
           fontFamily: 'Montserrat, sans-serif',
           textOrientation: 'horizontal',
           centerDividerEmoji: 'none',
@@ -155,14 +158,17 @@ export default function MosaicEditorPage({ params }: MosaicEditorPageProps) {
         };
 
         const defaultSettings: MosaicSettings = {
-          density: isTextOrNumber ? 'ultra' : 'medium',
-          gridCols: isTextOrNumber ? 96 : 40,
-          gridRows: isTextOrNumber ? 96 : 40,
+          density: isTextOrNumber ? 'ultra' : isCustom ? 'high' : 'medium',
+          gridCols: isTextOrNumber ? 96 : isCustom ? 60 : 40,
+          gridRows: isTextOrNumber ? 96 : isCustom ? 60 : 40,
           tileGap: 0,
           borderRadius: 2,
           gridLayout: 'perfect-aligned',
-          colorMatchingMode: 'color-match',
-          colorTintBlend: 0.0,
+          colorMatchingMode: isCustom ? 'full-tonal' : 'color-match',
+          colorTintBlend: isCustom ? 0.56 : 0.0,
+          contrastBoost: isCustom ? 1.32 : 1.25,
+          vibrancyBoost: isCustom ? 1.28 : 1.18,
+          eyeCatchingPreset: isCustom ? 'romantic-glow' : undefined,
           subjectEdgeBoost: 0.60,
           backgroundContrastMode: 'studio-high-key',
           customImageBlendMode: 'studio-hdr',
@@ -172,14 +178,23 @@ export default function MosaicEditorPage({ params }: MosaicEditorPageProps) {
           background: { type: 'color', value: '#0C0C0E' },
           canvasPreset: '1:1',
           aspectRatio: 1,
-          overlayText: {
-            text: defaultTarget.targetText ? `${defaultTarget.targetText}` : 'BUNTY ❤️ BABLI',
-            subtext: 'A Lifetime of Beautiful Memories • 2026',
-            position: 'below',
-            fontFamily: 'Cinzel, serif',
-            color: '#C8A96B',
-            fontSize: 24,
-          },
+          overlayText: isCustom
+            ? {
+                text: 'CUSTOM PICTURE ART',
+                subtext: 'A Lifetime of Beautiful Memories • 2026',
+                position: 'below',
+                fontFamily: 'Cinzel, serif',
+                color: '#C8A96B',
+                fontSize: 24,
+              }
+            : {
+                text: defaultTarget.targetText ? `${defaultTarget.targetText}` : 'BUNTY ❤️ BABLI',
+                subtext: 'A Lifetime of Beautiful Memories • 2026',
+                position: 'below',
+                fontFamily: 'Cinzel, serif',
+                color: '#C8A96B',
+                fontSize: 24,
+              },
         };
 
         const initialMosaic = await createPhotoMosaic(analyzed, defaultTarget, defaultSettings);
@@ -399,29 +414,30 @@ export default function MosaicEditorPage({ params }: MosaicEditorPageProps) {
     );
   };
 
-  const handleReplaceTilePhoto = (tileId: string, newPhotoId: string) => {
-    if (!project) return;
-    const newPhoto = analyzedPhotos.find((p) => p.id === newPhotoId);
-    if (!newPhoto) return;
+  const handleReplaceTilePhoto = useCallback((tileId: string, newPhotoId: string) => {
+    setProject((prev) => {
+      if (!prev) return prev;
+      const newPhoto = analyzedPhotos.find((p) => p.id === newPhotoId);
+      if (!newPhoto) return prev;
 
-    const newTiles = project.tiles.map((t) => {
-      if (t.id !== tileId) return t;
-      return {
-        ...t,
-        photoId: newPhotoId,
-        photoRgb: newPhoto.averageRgb,
-      };
+      const newTiles = prev.tiles.map((t) => {
+        if (t.id !== tileId) return t;
+        return {
+          ...t,
+          photoId: newPhotoId,
+          photoRgb: newPhoto.averageRgb,
+        };
+      });
+
+      return { ...prev, tiles: newTiles };
     });
+  }, [analyzedPhotos]);
 
-    setProject({ ...project, tiles: newTiles });
-  };
-
-  const handleSetHeroPhoto = (photoId: string) => {
-    if (!project) return;
+  const handleSetHeroPhoto = useCallback((photoId: string) => {
     regenerate(undefined, { heroPhotoId: photoId });
-  };
+  }, [regenerate]);
 
-  const handleApplyEmojiMosaic = async (emojis: string[]) => {
+  const handleApplyEmojiMosaic = useCallback(async (emojis: string[]) => {
     try {
       setIsProcessing(true);
       const { analyzedPhotos: emojiAnalyzed, photos: emojiPhotos } = generateEmojiPhotos(emojis);
@@ -448,10 +464,24 @@ export default function MosaicEditorPage({ params }: MosaicEditorPageProps) {
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [project, projectId, historyIndex]);
 
-  const photosMap = new Map<string, PhotoMetadata>();
-  photos.forEach((p) => photosMap.set(p.id, p));
+  const photosMap = useMemo(() => {
+    const map = new Map<string, PhotoMetadata>();
+    photos.forEach((p) => map.set(p.id, p));
+    return map;
+  }, [photos]);
+
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const debouncedSaveProject = useCallback((projectToSave: MosaicProject) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => {
+      saveProject(projectToSave).catch(console.error);
+    }, 400);
+  }, []);
 
   const handleUpdateSettings = useCallback(
     (newSettings: Partial<MosaicSettings>) => {
@@ -487,12 +517,12 @@ export default function MosaicEditorPage({ params }: MosaicEditorPageProps) {
             },
             updatedAt: Date.now(),
           };
-          saveProject(updated).catch(console.error);
+          debouncedSaveProject(updated);
           return updated;
         });
       }
     },
-    [project, regenerate]
+    [project, regenerate, debouncedSaveProject]
   );
 
   const handleUpdateTarget = useCallback(
@@ -522,12 +552,12 @@ export default function MosaicEditorPage({ params }: MosaicEditorPageProps) {
             },
             updatedAt: Date.now(),
           };
-          saveProject(updated).catch(console.error);
+          debouncedSaveProject(updated);
           return updated;
         });
       }
     },
-    [project, regenerate]
+    [project, regenerate, debouncedSaveProject]
   );
 
   if (isLoading || !project) {
@@ -646,14 +676,14 @@ export default function MosaicEditorPage({ params }: MosaicEditorPageProps) {
               setMobileSheet(null);
               setIsSheetExpanded(false);
             }}
-            className="fixed inset-0 bg-black/75 backdrop-blur-sm z-40 lg:hidden animate-in fade-in duration-200"
+            className="fixed inset-0 bg-black/80 z-40 lg:hidden animate-in fade-in duration-150"
           />
 
           {/* Drawer Sheet */}
           <div
             className={`fixed inset-x-0 bottom-0 z-50 lg:hidden ${
               isSheetExpanded ? 'h-[95dvh] max-h-[95dvh]' : 'h-[78dvh] max-h-[78dvh]'
-            } bg-[#18181E] border-t-2 border-[#C8A96B]/40 rounded-t-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out animate-in slide-in-from-bottom`}
+            } bg-[#18181E] border-t-2 border-[#C8A96B]/40 rounded-t-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-200 ease-out transform-gpu will-change-transform animate-in slide-in-from-bottom`}
           >
             {/* Sheet Header */}
             <div

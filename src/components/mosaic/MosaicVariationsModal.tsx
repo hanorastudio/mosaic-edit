@@ -63,31 +63,31 @@ export const MosaicVariationsModal: React.FC<MosaicVariationsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="bg-[#1A1A1E] border border-[#C8A96B]/30 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4 animate-in fade-in duration-200">
+      <div className="bg-[#1A1A1E] border border-[#C8A96B]/30 rounded-2xl w-full max-w-xl max-h-[90dvh] shadow-2xl overflow-hidden flex flex-col text-white">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2C2C34] bg-[#141417]">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[#2C2C34] bg-[#141417] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#C8A96B]/20 flex items-center justify-center text-[#C8A96B]">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#C8A96B]/20 flex items-center justify-center text-[#C8A96B] shrink-0">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold font-heading">Artwork Style Variations</h3>
-              <p className="text-xs text-zinc-400">Select a layout variation for your photos.</p>
+              <h3 className="text-sm sm:text-base font-bold font-heading">Artwork Style Variations</h3>
+              <p className="text-[11px] sm:text-xs text-zinc-400">Select a layout variation for your photos.</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-zinc-400 hover:text-white p-1">
+          <button onClick={onClose} className="text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-white/10 touch-action-manipulation">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Variations List */}
-        <div className="p-6 space-y-3">
+        <div className="p-4 sm:p-6 space-y-2.5 sm:space-y-3 flex-1 overflow-y-auto custom-scrollbar">
           {variations.map((v) => (
             <button
               key={v.id}
               onClick={() => setSelectedId(v.id)}
-              className={`w-full p-4 rounded-xl border text-left flex items-start justify-between transition-all ${
+              className={`w-full p-3.5 sm:p-4 rounded-xl border text-left flex items-start justify-between transition-all touch-action-manipulation active:scale-98 ${
                 selectedId === v.id
                   ? 'border-[#C8A96B] bg-[#C8A96B]/15 shadow-md shadow-[#C8A96B]/20'
                   : 'border-[#2C2C34] bg-[#141417] hover:border-[#C8A96B]/40'
@@ -105,16 +105,16 @@ export const MosaicVariationsModal: React.FC<MosaicVariationsModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-[#2C2C34] bg-[#141417]">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-t border-[#2C2C34] bg-[#141417] shrink-0 pb-safe">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-medium text-white/80 hover:bg-[#2C2C34] rounded-lg transition-colors"
+            className="px-4 py-2 text-xs font-medium text-white/80 hover:bg-[#2C2C34] rounded-lg transition-colors touch-action-manipulation"
           >
             Cancel
           </button>
           <button
             onClick={handleApply}
-            className="flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-[#141414] bg-[#C8A96B] hover:bg-[#E5C158] rounded-xl shadow-lg transition-colors"
+            className="flex items-center gap-2 px-5 sm:px-6 py-2.5 text-xs font-bold text-[#141414] bg-[#C8A96B] hover:bg-[#E5C158] rounded-xl shadow-lg transition-colors touch-action-manipulation active:scale-95"
           >
             <RefreshCw className="w-4 h-4" />
             <span>Apply Style Variation</span>
@@ -124,3 +124,4 @@ export const MosaicVariationsModal: React.FC<MosaicVariationsModalProps> = ({
     </div>
   );
 };
+

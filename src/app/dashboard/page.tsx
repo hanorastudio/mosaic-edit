@@ -88,14 +88,24 @@ export default function DashboardPage() {
       const sample = await createSampleMosaicPhotoCollection(projectId, 120);
       await savePhotosBatch(sample.photos, sample.blobsMap);
 
-      const targetType: 'shape' | 'name' | 'number' = text
-        ? isNaN(Number(text))
-          ? 'name'
-          : 'number'
+      const isCustom = shape === 'custom-image' || shape === 'custom';
+      const isText = shape === 'name' || shape === 'letter' || (text && isNaN(Number(text)));
+      const isNumber =
+        shape === 'number' ||
+        (text && !isNaN(Number(text)) && shape !== 'heart' && shape !== 'star' && shape !== 'crown');
+
+      const targetType: 'shape' | 'name' | 'number' | 'custom-image' = isCustom
+        ? 'custom-image'
+        : isNumber
+        ? 'number'
+        : isText
+        ? 'name'
         : 'shape';
       const shapeId = shape === 'heart' || shape === 'star' || shape === 'crown' ? shape : 'heart';
-      const finalTargetText = text || (targetType === 'number' ? '25' : 'BUNTY BABLI');
+      const finalTargetText = isCustom ? '' : text || (targetType === 'number' ? '25' : 'BUNTY BABLI');
       const isTextOrNum = targetType === 'name' || targetType === 'number';
+
+      const customSampleUrl = isCustom ? '/default-custom-pic.png' : undefined;
 
       const mosaic = await createPhotoMosaic(
         sample.analyzedPhotos,
@@ -103,33 +113,48 @@ export default function DashboardPage() {
           type: targetType,
           shapeId: shapeId as any,
           targetText: finalTargetText,
+          customImageUrl: customSampleUrl,
+          customImageMode: isCustom ? 'full-color' : undefined,
           fontFamily: 'Montserrat, sans-serif',
           textOrientation: 'horizontal',
           centerDividerEmoji: 'none',
           centerEmojiScale: 0.70,
         },
         {
-          density: isTextOrNum ? 'ultra' : 'medium',
-          gridCols: isTextOrNum ? 96 : 40,
-          gridRows: isTextOrNum ? 96 : 40,
+          density: isTextOrNum ? 'ultra' : isCustom ? 'high' : 'medium',
+          gridCols: isTextOrNum ? 96 : isCustom ? 60 : 40,
+          gridRows: isTextOrNum ? 96 : isCustom ? 60 : 40,
           tileGap: 0,
           borderRadius: 2,
-          colorMatchingMode: 'color-match',
-          colorTintBlend: 0.0,
+          colorMatchingMode: isCustom ? 'full-tonal' : 'color-match',
+          colorTintBlend: isCustom ? 0.56 : 0.0,
+          contrastBoost: isCustom ? 1.32 : undefined,
+          vibrancyBoost: isCustom ? 1.28 : undefined,
+          eyeCatchingPreset: isCustom ? 'romantic-glow' : undefined,
+          customImageBlendMode: 'studio-hdr',
           useAllPhotosOnce: true,
           allowSmartRepetition: true,
           heroScale: 2,
           background: { type: 'color', value: '#0C0C0E' },
           canvasPreset: '1:1',
           aspectRatio: 1,
-          overlayText: {
-            text: finalTargetText,
-            subtext: 'A Lifetime of Beautiful Memories • 2026',
-            position: 'below',
-            fontFamily: 'Cinzel, serif',
-            color: '#C8A96B',
-            fontSize: 24,
-          },
+          overlayText: isCustom
+            ? {
+                text: 'CUSTOM PICTURE ART',
+                subtext: 'A Lifetime of Beautiful Memories • 2026',
+                position: 'below',
+                fontFamily: 'Cinzel, serif',
+                color: '#C8A96B',
+                fontSize: 24,
+              }
+            : {
+                text: finalTargetText,
+                subtext: 'A Lifetime of Beautiful Memories • 2026',
+                position: 'below',
+                fontFamily: 'Cinzel, serif',
+                color: '#C8A96B',
+                fontSize: 24,
+              },
         }
       );
       mosaic.id = projectId;
@@ -205,6 +230,13 @@ export default function DashboardPage() {
             Heart Mosaic
           </button>
           <button
+            onClick={() => handleLaunchQuickMosaic('custom-image')}
+            className="hover:text-[#E5C158] text-zinc-300 transition-colors cursor-pointer flex items-center gap-1.5 font-medium"
+          >
+            <Upload className="w-3.5 h-3.5 text-[#C8A96B]" />
+            <span>Custom Pic</span>
+          </button>
+          <button
             onClick={() => handleLaunchQuickMosaic('name', 'ANANYA')}
             className="hover:text-white transition-colors cursor-pointer"
           >
@@ -275,6 +307,16 @@ export default function DashboardPage() {
               className="text-left text-sm font-semibold text-[#9E9E9E] hover:text-white py-2.5 px-3 rounded-xl hover:bg-[#1E1E24] transition-all active:scale-[0.98]"
             >
               Heart Mosaic
+            </button>
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                handleLaunchQuickMosaic('custom-image');
+              }}
+              className="text-left text-sm font-semibold text-[#E5C158] hover:text-white py-2.5 px-3 rounded-xl hover:bg-[#1E1E24] transition-all active:scale-[0.98] flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4 text-[#C8A96B]" />
+              <span>Custom Pic Mosaic</span>
             </button>
             <button
               onClick={() => {
