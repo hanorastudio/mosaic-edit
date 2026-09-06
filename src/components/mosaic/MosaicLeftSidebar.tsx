@@ -25,6 +25,7 @@ import {
   Trash2,
   Smile,
   Plus,
+  ChevronDown,
 } from 'lucide-react';
 import { EMOJI_THEME_PRESETS, parseEmojisFromString } from '@/lib/mosaic/emojiTiles';
 import {
@@ -150,6 +151,7 @@ interface MosaicLeftSidebarProps {
   mobileActiveTab?: string;
   onCloseMobileSheet?: () => void;
   onSelectMobileTab?: (tabId: string) => void;
+  onExpandMobileSheet?: () => void;
 }
 
 export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
@@ -169,6 +171,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
   mobileActiveTab,
   onCloseMobileSheet,
   onSelectMobileTab,
+  onExpandMobileSheet,
 }) => {
   const getInitialTab = () => {
     if (mobileActiveTab) return mobileActiveTab as any;
@@ -184,6 +187,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [customEmojiInput, setCustomEmojiInput] = useState<string>('');
+  const [isStrategyExpanded, setIsStrategyExpanded] = useState<boolean>(false);
   const [activeEmojis, setActiveEmojis] = useState<string[]>(
     settings.selectedEmojis && settings.selectedEmojis.length > 0
       ? settings.selectedEmojis
@@ -223,8 +227,6 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
   const requiredTiles = tilesCount && tilesCount > 0 ? tilesCount : densityEstimatedTiles;
   const isEnoughPhotos = photos.length >= requiredTiles;
 
-  const currentTab = isMobileSheet && mobileActiveTab ? mobileActiveTab : activeTab;
-
   const tabs = [
     { id: 'photos', label: 'Photos', icon: ImageIcon, count: photos.length },
     { id: 'emojis', label: 'Emojis', icon: Smile, count: activeEmojis.length },
@@ -235,6 +237,58 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
     { id: 'backgrounds', label: 'Background', icon: Palette },
     { id: 'text', label: 'Text Overlay', icon: AlignJustify },
   ];
+
+  // Context-aware Mobile Sub-Tabs (Clean sub-menu per category)
+  const getMobileSubTabs = () => {
+    // 1. Names & Art category ('letters' or 'numbers')
+    if (mobileActiveTab === 'letters') {
+      return [
+        { id: 'letters', label: 'Names & Words', icon: Type },
+        { id: 'numbers', label: 'Number Art', icon: Hash },
+        { id: 'backgrounds', label: 'Background', icon: Palette },
+        { id: 'text', label: 'Text Overlay', icon: AlignJustify },
+      ];
+    }
+    // 2. Photos category ('photos')
+    if (mobileActiveTab === 'photos') {
+      return [
+        { id: 'photos', label: 'Photo Collection', icon: ImageIcon, count: photos.length },
+        { id: 'backgrounds', label: 'Background', icon: Palette },
+        { id: 'text', label: 'Text Overlay', icon: AlignJustify },
+      ];
+    }
+    // 3. Emojis category ('emojis')
+    if (mobileActiveTab === 'emojis') {
+      return [
+        { id: 'emojis', label: 'Emoji Studio', icon: Smile, count: activeEmojis.length },
+        { id: 'backgrounds', label: 'Background', icon: Palette },
+        { id: 'text', label: 'Text Overlay', icon: AlignJustify },
+      ];
+    }
+    // 4. Custom Pic category ('custom')
+    if (mobileActiveTab === 'custom') {
+      return [
+        { id: 'custom', label: 'Custom Picture', icon: Upload },
+        { id: 'backgrounds', label: 'Background', icon: Palette },
+        { id: 'text', label: 'Text Overlay', icon: AlignJustify },
+      ];
+    }
+    // 5. Shapes category ('shapes')
+    if (mobileActiveTab === 'shapes') {
+      return [
+        { id: 'shapes', label: 'Shape Art', icon: Shapes },
+        { id: 'backgrounds', label: 'Background', icon: Palette },
+        { id: 'text', label: 'Text Overlay', icon: AlignJustify },
+      ];
+    }
+
+    // Default fallback
+    return [
+      { id: activeTab, label: 'Main', icon: Shapes },
+      { id: 'backgrounds', label: 'Background', icon: Palette },
+      { id: 'text', label: 'Text Overlay', icon: AlignJustify },
+    ];
+  };
 
   const filteredPhotos = photos.filter((p) =>
     searchQuery ? p.name.toLowerCase().includes(searchQuery.toLowerCase()) : true
@@ -248,7 +302,6 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
 
     setActiveTab(tabId as any);
     setIsCollapsed(false);
-    onSelectMobileTab?.(tabId);
 
     // Auto-switch target type & regenerate canvas when switching categories
     if (tabId === 'letters') {
@@ -1291,15 +1344,15 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
     return (
       <div className="w-full h-full flex flex-col bg-[#18181E] text-white">
         {/* Mobile Horizontal Tabs Pill Bar */}
-        <div className="flex items-center gap-1.5 p-2 bg-[#121214] border-b border-[#2C2C34] overflow-x-auto no-scrollbar shrink-0">
-          {tabs.map((tab) => {
+        <div className="flex items-center gap-1.5 p-2 bg-[#121214] border-b border-[#2C2C34] overflow-x-auto no-scrollbar shrink-0 touch-pan-x">
+          {getMobileSubTabs().map((tab) => {
             const Icon = tab.icon;
-            const isActive = currentTab === tab.id;
+            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 touch-manipulation active:scale-95 ${
                   isActive
                     ? 'bg-[#C8A96B] text-black font-bold shadow-md shadow-[#C8A96B]/20'
                     : 'text-zinc-400 hover:text-white bg-[#1A1A1E]'
@@ -1318,119 +1371,159 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
         </div>
 
         {/* Tab Content for Mobile */}
-        <div className="flex-1 overflow-y-auto flex flex-col min-h-0">
+        <div className="flex-1 overflow-y-auto flex flex-col min-h-0 overscroll-contain touch-pan-y custom-scrollbar">
           {/* TAB 1: PHOTOS */}
-          {currentTab === 'photos' && (
-            <div className="flex flex-col h-full">
-              <div className="p-4 border-b border-[#2C2C34] space-y-3">
-                <div className="flex items-center justify-between">
+          {activeTab === 'photos' && (
+            <div
+              className="flex-1 overflow-y-auto p-4 space-y-3.5 overscroll-contain touch-pan-y custom-scrollbar"
+              onTouchStart={(e) => {
+                const startY = e.touches[0].clientY;
+                const handleTouchMove = (ev: TouchEvent) => {
+                  if (startY - ev.touches[0].clientY > 30) {
+                    onExpandMobileSheet?.();
+                    window.removeEventListener('touchmove', handleTouchMove);
+                  }
+                };
+                window.addEventListener('touchmove', handleTouchMove, { passive: true, once: true });
+              }}
+            >
+              {/* Header Title & Photo Count */}
+              <div className="flex items-center justify-between">
+                <div>
                   <h3 className="text-sm font-bold uppercase tracking-wider text-[#FAF8F5]">
                     Photo Collection
                   </h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#C8A96B]/20 text-[#C8A96B] font-mono">
-                    {photos.length} Photos
-                  </span>
+                  <p className="text-[11px] text-zinc-400">
+                    {photos.length} uploaded photo{photos.length !== 1 ? 's' : ''} for mosaic tiles
+                  </p>
+                </div>
+                <span className="text-xs px-2.5 py-1 rounded-full bg-[#C8A96B]/20 text-[#E5C158] font-mono font-bold border border-[#C8A96B]/30">
+                  {photos.length} Photos
+                </span>
+              </div>
+
+              {/* Upload & Action Buttons */}
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gradient-to-r from-[#C8A96B] to-[#E5C158] hover:brightness-110 text-black text-xs font-bold rounded-xl cursor-pointer transition-all shadow-md shadow-[#C8A96B]/20 text-center active:scale-95">
+                    <Upload className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">Add Photos</span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          onUploadPhotos(Array.from(e.target.files), false);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-[#222228] hover:bg-[#2C2C34] border border-[#C8A96B]/30 text-[#E5C158] text-xs font-bold rounded-xl cursor-pointer transition-colors text-center active:scale-95">
+                    <Upload className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">Upload & Replace</span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          onUploadPhotos(Array.from(e.target.files), true);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <label className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-[#C8A96B] hover:bg-[#E5C158] text-[#141414] text-xs font-bold rounded-xl cursor-pointer transition-colors shadow-sm text-center">
-                      <Upload className="w-3.5 h-3.5 shrink-0" />
-                      <span className="truncate">Add Photos</span>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={(e) => {
-                          if (e.target.files && e.target.files.length > 0) {
-                            onUploadPhotos(Array.from(e.target.files), false);
-                          }
-                        }}
-                        className="hidden"
-                      />
-                    </label>
-
-                    <label className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-[#2C2C34] hover:bg-[#383842] border border-[#C8A96B]/30 text-[#E5C158] text-xs font-bold rounded-xl cursor-pointer transition-colors text-center">
-                      <Upload className="w-3.5 h-3.5 shrink-0" />
-                      <span className="truncate">Upload & Replace</span>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={(e) => {
-                          if (e.target.files && e.target.files.length > 0) {
-                            onUploadPhotos(Array.from(e.target.files), true);
-                          }
-                        }}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={onLoadSamplePhotos}
+                    className="flex items-center justify-center gap-1.5 px-2.5 py-2 bg-[#1A1A1E] hover:bg-[#2C2C34] border border-[#2C2C34] text-zinc-300 text-[11px] font-medium rounded-xl transition-colors active:scale-95"
+                  >
+                    <FolderPlus className="w-3.5 h-3.5 text-[#C8A96B]" />
+                    <span>Load Sample Photos</span>
+                  </button>
+                  {onClearAllPhotos && (
                     <button
-                      onClick={onLoadSamplePhotos}
-                      className="flex items-center justify-center gap-1.5 px-2.5 py-2 bg-[#1E1E24] hover:bg-[#2C2C34] border border-[#2C2C34] text-zinc-300 text-[11px] font-medium rounded-xl transition-colors"
+                      onClick={onClearAllPhotos}
+                      className="flex items-center justify-center gap-1.5 px-2.5 py-2 bg-[#1A1A1E] hover:bg-red-500/20 border border-[#2C2C34] hover:border-red-500/40 text-zinc-300 hover:text-red-400 text-[11px] font-medium rounded-xl transition-colors active:scale-95"
                     >
-                      <FolderPlus className="w-3.5 h-3.5 text-[#C8A96B]" />
-                      <span>Load Sample Photos</span>
+                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                      <span>Clear All Photos</span>
                     </button>
-                    {onClearAllPhotos && (
-                      <button
-                        onClick={onClearAllPhotos}
-                        className="flex items-center justify-center gap-1.5 px-2.5 py-2 bg-[#1E1E24] hover:bg-red-500/20 border border-[#2C2C34] hover:border-red-500/40 text-zinc-300 hover:text-red-400 text-[11px] font-medium rounded-xl transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                        <span>Clear All Photos</span>
-                      </button>
-                    )}
+                  )}
+                </div>
+              </div>
+
+              {/* Photo Fill Strategy Selector (Compact & Collapsible) */}
+              {isEnoughPhotos ? (
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 space-y-1 animate-in fade-in">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>✨ 100% Unique Photos Matched</span>
+                    </span>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                      Zero Repetition
+                    </span>
                   </div>
-
-                  {/* Photo Fill Strategy Selector OR 100% Unique Match Banner */}
-                  {isEnoughPhotos ? (
-                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 space-y-1.5 animate-in fade-in">
-                      <div className="flex items-center justify-between text-xs font-bold">
-                        <span className="flex items-center gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>✨ 100% Unique Photos Matched</span>
-                        </span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
-                          Zero Repetition
+                  <p className="text-[10px] text-zinc-300 leading-snug">
+                    You have {photos.length} photos for {requiredTiles} tiles. Every tile uses a unique picture with zero duplicates!
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-xl bg-[#141417] border border-[#C8A96B]/30 overflow-hidden">
+                  <button
+                    onClick={() => setIsStrategyExpanded(!isStrategyExpanded)}
+                    className="w-full p-2.5 flex items-center justify-between text-left hover:bg-[#1C1C22] transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-[#E5C158]" />
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-[#E5C158]">
+                        <span>Fill Strategy:</span>
+                        <span className="text-[11px] text-zinc-300 font-normal">
+                          {settings.photoFillStrategy === 'mix-sample-photos'
+                            ? '✨ Mix Sample Photos'
+                            : '🔁 Repeat Uploaded'}
                         </span>
                       </div>
-                      <p className="text-[11px] text-zinc-300 leading-snug">
-                        You have {photos.length} photos for {requiredTiles} tiles. Every tile uses a unique picture with zero duplicates! Repetition is automatically disabled.
-                      </p>
                     </div>
-                  ) : (
-                    <div className="p-3 rounded-xl bg-[#C8A96B]/10 border border-[#C8A96B]/30 space-y-2">
-                      <div className="flex items-center justify-between text-xs font-semibold text-[#C8A96B]">
-                        <span className="flex items-center gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5" />
-                          <span>Photo Fill Strategy</span>
-                        </span>
-                        <span className="text-[10px] font-mono text-[#E5C158] font-bold">
-                          {photos.length} / {requiredTiles} photos
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-zinc-400 font-mono">
+                        {photos.length}/{requiredTiles}
+                      </span>
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${
+                          isStrategyExpanded ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </div>
+                  </button>
 
-                      <p className="text-[11px] text-zinc-300 leading-snug">
+                  {isStrategyExpanded && (
+                    <div className="p-2.5 pt-0 space-y-2 border-t border-[#2C2C34]/50 animate-in fade-in">
+                      <p className="text-[10px] text-zinc-400 mt-1.5 leading-snug">
                         You have {photos.length} photos for {requiredTiles} tiles. Choose how remaining tiles are filled:
                       </p>
 
-                      <div className="grid grid-cols-1 gap-1.5 pt-0.5">
+                      <div className="grid grid-cols-1 gap-1.5">
                         <button
                           onClick={() => onUpdateSettings({ photoFillStrategy: 'repeat-uploaded' })}
                           className={`p-2 rounded-lg border text-left flex flex-col transition-all ${
                             settings.photoFillStrategy !== 'mix-sample-photos'
                               ? 'border-[#C8A96B] bg-[#C8A96B]/20 text-white shadow-sm'
-                              : 'border-[#2C2C34] bg-[#141417] text-zinc-400 hover:text-white'
+                              : 'border-[#2C2C34] bg-[#18181E] text-zinc-400 hover:text-white'
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-[#E5C158]">🔁 Repeat My Uploaded Photos</span>
                             {settings.photoFillStrategy !== 'mix-sample-photos' && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-semibold">Active</span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-semibold">
+                                Active
+                              </span>
                             )}
                           </div>
                           <span className="text-[10px] text-zinc-400 mt-0.5">
@@ -1443,13 +1536,15 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
                           className={`p-2 rounded-lg border text-left flex flex-col transition-all ${
                             settings.photoFillStrategy === 'mix-sample-photos'
                               ? 'border-[#C8A96B] bg-[#C8A96B]/20 text-white shadow-sm'
-                              : 'border-[#2C2C34] bg-[#141417] text-zinc-400 hover:text-white'
+                              : 'border-[#2C2C34] bg-[#18181E] text-zinc-400 hover:text-white'
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-white">✨ Mix In Sample Photos</span>
                             {settings.photoFillStrategy === 'mix-sample-photos' && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-semibold">Active</span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-semibold">
+                                Active
+                              </span>
                             )}
                           </div>
                           <span className="text-[10px] text-zinc-400 mt-0.5">
@@ -1460,15 +1555,24 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
                     </div>
                   )}
                 </div>
-              </div>
+              )}
 
-              {/* Photo Grid Preview */}
-              <div className="flex-1 overflow-y-auto p-4">
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+              {/* Photo Gallery Grid - Full View with Swipe Up */}
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+                    Uploaded Pictures Gallery ({filteredPhotos.length})
+                  </span>
+                  <span className="text-[10px] text-[#E5C158] font-medium flex items-center gap-1">
+                    <span>↕ Swipe to view all</span>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 pb-16">
                   {filteredPhotos.map((p) => (
                     <div
                       key={p.id}
-                      className="relative aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-white/10 group"
+                      className="relative aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-white/10 group shadow-sm"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -1479,8 +1583,12 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
                       />
                       {onDeletePhoto && (
                         <button
-                          onClick={() => onDeletePhoto(p.id)}
-                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/80 hover:bg-red-600 flex items-center justify-center text-white text-[10px] transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeletePhoto(p.id);
+                          }}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/80 hover:bg-red-600 flex items-center justify-center text-white text-[10px] transition-colors shadow"
+                          title="Delete photo"
                         >
                           ×
                         </button>
@@ -1493,7 +1601,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
           )}
 
           {/* TAB 2: EMOJIS */}
-          {currentTab === 'emojis' && (
+          {activeTab === 'emojis' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-[#FAF8F5]">
@@ -1560,7 +1668,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
           )}
 
           {/* TAB 3: SHAPES */}
-          {currentTab === 'shapes' && (
+          {activeTab === 'shapes' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-[#FAF8F5]">
@@ -1600,7 +1708,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
           )}
 
           {/* TAB 4: LETTERS & NAMES */}
-          {currentTab === 'letters' && (
+          {activeTab === 'letters' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-[#FAF8F5]">
@@ -1815,7 +1923,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
           )}
 
           {/* TAB 5: NUMBERS */}
-          {currentTab === 'numbers' && (
+          {activeTab === 'numbers' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-[#FAF8F5]">
@@ -1923,14 +2031,14 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
           )}
 
           {/* TAB 6: CUSTOM IMAGE */}
-          {currentTab === 'custom' && (
+          {activeTab === 'custom' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {renderCustomPictureControls()}
             </div>
           )}
 
           {/* TAB 7: BACKGROUNDS */}
-          {currentTab === 'backgrounds' && (
+          {activeTab === 'backgrounds' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-[#FAF8F5]">
@@ -1971,7 +2079,7 @@ export const MosaicLeftSidebar: React.FC<MosaicLeftSidebarProps> = ({
           )}
 
           {/* TAB 8: TEXT OVERLAY */}
-          {currentTab === 'text' && (
+          {activeTab === 'text' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
               {renderTextOverlayControls()}
             </div>

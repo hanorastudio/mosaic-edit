@@ -558,11 +558,13 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
       {/* Main Scalable Mosaic Stage */}
       <div
         ref={stageRef}
-        className="transition-transform duration-75 ease-out origin-center relative shadow-[0_30px_100px_rgba(0,0,0,0.9)] rounded-2xl overflow-hidden border border-white/15"
+        className={`origin-center relative shadow-[0_30px_100px_rgba(0,0,0,0.9)] rounded-2xl overflow-hidden border border-white/15 ${
+          isPanning ? 'transition-none' : 'transition-transform duration-100 ease-out'
+        }`}
         style={{
           width: `${canvasWidth}px`,
           height: `${canvasHeight}px`,
-          transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
+          transform: `translate3d(${panOffset.x}px, ${panOffset.y}px, 0) scale(${zoomLevel})`,
           background: project.settings.background.value,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -906,352 +908,370 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
 
       {/* Floating On-Canvas Text Editor Toolbar / Popover */}
       {isEditingText && overlay && (
-        <div
-          onMouseDown={(e) => e.stopPropagation()}
-          onMouseMove={(e) => e.stopPropagation()}
-          onMouseUp={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
-          onWheel={(e) => e.stopPropagation()}
-          onTouchStart={(e) => e.stopPropagation()}
-          onTouchMove={(e) => e.stopPropagation()}
-          onTouchEnd={(e) => e.stopPropagation()}
-          className="absolute top-16 left-1/2 -translate-x-1/2 z-50 w-[420px] max-w-[95vw] rounded-2xl bg-[#1A1A1E]/95 border border-[#C8A96B]/50 p-4 shadow-2xl backdrop-blur-xl animate-in fade-in duration-150 text-white space-y-3.5 max-h-[80vh] flex flex-col"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/10 pb-2.5 shrink-0">
-            <div className="flex items-center gap-2">
-              <Type className="w-4 h-4 text-[#C8A96B]" />
-              <span className="text-xs font-bold font-heading">Edit Canvas Words & Plaque</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={handleDeleteTextOverlay}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-400 text-[11px] font-semibold transition-colors"
-                title="Delete this text completely from the canvas"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Delete Words</span>
-              </button>
-              <button
-                onClick={() => setIsEditingText(false)}
-                className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/10"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+        <>
+          {/* Mobile Backdrop for safe touch dismissal */}
+          <div
+            onClick={() => setIsEditingText(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 sm:hidden animate-in fade-in duration-150"
+          />
 
-          {/* Sub-Tabs: Words, Fonts, Glassmorphism */}
-          <div className="grid grid-cols-3 gap-1 p-1 bg-[#121214] rounded-xl border border-[#2C2C34] shrink-0">
-            {[
-              { id: 'content', label: '📝 Words & Color' },
-              { id: 'font', label: '🔤 Stylish Fonts' },
-              { id: 'glass', label: '🧊 Glassmorphism' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setTextEditorTab(tab.id as any)}
-                className={`py-1.5 px-1 rounded-lg text-center text-[11px] font-semibold transition-all ${
-                  textEditorTab === tab.id
-                    ? 'bg-[#C8A96B] text-black shadow-sm font-bold'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* TAB 1: WORDS, COLOR & POSITION */}
-          {textEditorTab === 'content' && (
-            <div className="space-y-3 overflow-y-auto pr-1 custom-scrollbar">
-              {/* Drag Instruction Banner */}
-              <div className="p-2 rounded-xl bg-[#C8A96B]/10 border border-[#C8A96B]/25 flex items-center gap-2 text-[11px] text-[#C8A96B]">
-                <Move className="w-3.5 h-3.5 shrink-0" />
-                <span>Click and drag the text anywhere on canvas to reposition freely!</span>
+          <div
+            onMouseDown={(e) => e.stopPropagation()}
+            onMouseMove={(e) => e.stopPropagation()}
+            onMouseUp={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+            onWheel={(e) => e.stopPropagation()}
+            className="fixed inset-x-2 bottom-20 sm:bottom-auto sm:top-16 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50 w-auto sm:w-[440px] max-w-[96vw] rounded-3xl sm:rounded-2xl bg-[#18181E] border border-[#C8A96B]/50 p-3.5 sm:p-4 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 sm:slide-in-from-top-4 duration-150 text-white flex flex-col max-h-[calc(100dvh-160px)] sm:max-h-[82vh] overflow-hidden overscroll-contain touch-pan-y"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/10 pb-2.5 shrink-0">
+              <div className="flex items-center gap-2">
+                <Type className="w-4 h-4 text-[#C8A96B]" />
+                <span className="text-xs sm:text-sm font-bold font-heading">Edit Canvas Words & Plaque</span>
               </div>
-
-              {/* Direct Text Inputs */}
-              <div className="space-y-2">
-                <div>
-                  <label className="block text-[10px] uppercase font-semibold text-[#C8A96B] mb-1">
-                    Title Text
-                  </label>
-                  <input
-                    type="text"
-                    value={overlay.text || ''}
-                    onChange={(e) => handleUpdateText('text', e.target.value)}
-                    placeholder="e.g. BUNTY BABLI"
-                    className="w-full px-3 py-1.5 bg-[#121214] border border-[#2C2C34] focus:border-[#C8A96B] rounded-xl text-xs text-white font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] uppercase font-semibold text-zinc-400 mb-1">
-                    Subtitle Text
-                  </label>
-                  <input
-                    type="text"
-                    value={overlay.subtext || ''}
-                    onChange={(e) => handleUpdateText('subtext', e.target.value)}
-                    placeholder="e.g. A Lifetime of Beautiful Memories • 2026"
-                    className="w-full px-3 py-1.5 bg-[#121214] border border-[#2C2C34] focus:border-[#C8A96B] rounded-xl text-xs text-zinc-200"
-                  />
-                </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handleDeleteTextOverlay}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-400 text-[11px] font-semibold transition-colors touch-manipulation active:scale-95"
+                  title="Delete this text completely from the canvas"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Words</span>
+                </button>
+                <button
+                  onClick={() => setIsEditingText(false)}
+                  className="text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-white/10 touch-manipulation"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
+            </div>
 
-              {/* Position, Font Size & Color Quick Controls */}
-              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/10">
-                <div>
-                  <label className="block text-[10px] uppercase font-semibold text-zinc-400 mb-1">
-                    Quick Snap Position
-                  </label>
-                  <div className="flex bg-[#121214] border border-[#2C2C34] rounded-xl p-0.5">
-                    {[
-                      { id: 'above', label: 'Top' },
-                      { id: 'inside', label: 'Center' },
-                      { id: 'below', label: 'Bottom' },
-                    ].map((pos) => (
-                      <button
-                        key={pos.id}
-                        onClick={() => handleUpdateText('position', pos.id)}
-                        className={`flex-1 py-1 text-[10px] font-semibold rounded-lg transition-colors ${
-                          overlay.position === pos.id &&
-                          overlay.y === (pos.id === 'above' ? 8 : pos.id === 'inside' ? 50 : 90)
-                            ? 'bg-[#C8A96B] text-black'
-                            : 'text-zinc-400 hover:text-white'
-                        }`}
-                      >
-                        {pos.label}
-                      </button>
-                    ))}
+            {/* Sub-Tabs: Words, Fonts, Glassmorphism */}
+            <div className="grid grid-cols-3 gap-1 p-1 my-2 bg-[#121214] rounded-xl border border-[#2C2C34] shrink-0">
+              {[
+                { id: 'content', label: '📝 Words & Color' },
+                { id: 'font', label: '🔤 Stylish Fonts' },
+                { id: 'glass', label: '🧊 Glassmorphism' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setTextEditorTab(tab.id as any)}
+                  className={`py-1.5 px-1 rounded-lg text-center text-[11px] font-semibold transition-all touch-manipulation ${
+                    textEditorTab === tab.id
+                      ? 'bg-[#C8A96B] text-black shadow-sm font-bold'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Scrollable Container with Full Touch Pan & Native Momentum */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y pr-1 custom-scrollbar">
+              {/* TAB 1: WORDS, COLOR & POSITION */}
+              {textEditorTab === 'content' && (
+                <div className="space-y-3 pb-2">
+                  {/* Drag Instruction Banner */}
+                  <div className="p-2 rounded-xl bg-[#C8A96B]/10 border border-[#C8A96B]/25 flex items-center gap-2 text-[11px] text-[#C8A96B]">
+                    <Move className="w-3.5 h-3.5 shrink-0" />
+                    <span>Click/touch and drag text anywhere on canvas to reposition!</span>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-[10px] uppercase font-semibold text-zinc-400 mb-1">
-                    Color
-                  </label>
-                  <div className="flex gap-1.5 items-center py-1">
-                    {['#C8A96B', '#FFFFFF', '#E5C158', '#FF758C', '#00F2FE', '#0C0C0E'].map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => handleUpdateText('color', c)}
-                        className={`w-5 h-5 rounded-full border transition-transform ${
-                          overlay.color === c ? 'scale-125 border-white' : 'border-white/20'
-                        }`}
-                        style={{ backgroundColor: c }}
+                  {/* Direct Text Inputs */}
+                  <div className="space-y-2">
+                    <div>
+                      <label className="block text-[10px] uppercase font-semibold text-[#C8A96B] mb-1">
+                        Title Text
+                      </label>
+                      <input
+                        type="text"
+                        value={overlay.text || ''}
+                        onChange={(e) => handleUpdateText('text', e.target.value)}
+                        placeholder="e.g. BUNTY BABLI"
+                        className="w-full px-3 py-1.5 bg-[#121214] border border-[#2C2C34] focus:border-[#C8A96B] rounded-xl text-xs text-white font-bold"
                       />
-                    ))}
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] uppercase font-semibold text-zinc-400 mb-1">
+                        Subtitle Text
+                      </label>
+                      <input
+                        type="text"
+                        value={overlay.subtext || ''}
+                        onChange={(e) => handleUpdateText('subtext', e.target.value)}
+                        placeholder="e.g. A Lifetime of Beautiful Memories • 2026"
+                        className="w-full px-3 py-1.5 bg-[#121214] border border-[#2C2C34] focus:border-[#C8A96B] rounded-xl text-xs text-zinc-200"
+                      />
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Font Size Slider */}
-              <div>
-                <div className="flex justify-between text-[10px] uppercase font-semibold text-zinc-400 mb-1">
-                  <span>Text Size</span>
-                  <span className="font-mono text-[#C8A96B]">{overlay.fontSize || 24}px</span>
-                </div>
-                <input
-                  type="range"
-                  min="14"
-                  max="56"
-                  step="1"
-                  value={overlay.fontSize || 24}
-                  onChange={(e) => handleUpdateText('fontSize', parseInt(e.target.value))}
-                  className="w-full accent-[#C8A96B] cursor-pointer"
-                />
-              </div>
-
-              {/* Text Clarity & Pop Mode */}
-              <div className="pt-2 border-t border-white/10 space-y-1.5">
-                <div className="flex justify-between items-center text-[10px]">
-                  <span className="font-semibold text-[#C8A96B] uppercase tracking-wider">
-                    Text Contrast & Pop
-                  </span>
-                  <span className="text-zinc-400 font-mono text-[9px]">100% Legibility</span>
-                </div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {TEXT_CLARITY_PRESETS.map((preset) => {
-                    const isSelected = (overlay.textClarity || 'ultra-pop') === preset.id;
-                    return (
-                      <button
-                        key={preset.id}
-                        onClick={() => handleUpdateText('textClarity', preset.id)}
-                        className={`p-2 rounded-xl border text-left flex flex-col justify-between transition-all ${
-                          isSelected
-                            ? 'border-[#C8A96B] bg-[#C8A96B]/25 text-white font-bold ring-1 ring-[#C8A96B]/60'
-                            : 'border-[#2C2C34] bg-[#121214] text-zinc-400 hover:text-white'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between w-full mb-0.5">
-                          <span className="text-xs font-semibold text-white">{preset.name}</span>
-                          <span className="text-[10px]">{preset.icon}</span>
-                        </div>
-                        <p className="text-[9px] text-zinc-400 leading-snug line-clamp-1">
-                          {preset.desc}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: STYLISH FONTS */}
-          {textEditorTab === 'font' && (
-            <div className="space-y-2 overflow-y-auto pr-1 max-h-[340px] custom-scrollbar">
-              <div className="flex items-center justify-between pb-1">
-                <span className="text-[11px] text-[#C8A96B] font-semibold">
-                  13 Stylish Signature & Luxury Fonts
-                </span>
-                <span className="text-[10px] text-zinc-400">1-Tap Apply</span>
-              </div>
-
-              <div className="grid grid-cols-1 gap-1.5">
-                {STYLISH_FONTS.map((font) => {
-                  const isSelected = (overlay.fontFamily || 'Cinzel, serif') === font.cssFamily;
-                  return (
-                    <button
-                      key={font.id}
-                      onClick={() => handleUpdateText('fontFamily', font.cssFamily)}
-                      className={`p-2 rounded-xl border text-left flex items-center justify-between transition-all ${
-                        isSelected
-                          ? 'border-[#C8A96B] bg-[#C8A96B]/20 text-white font-bold ring-1 ring-[#C8A96B]/50'
-                          : 'border-[#2C2C34] bg-[#121214] text-zinc-400 hover:text-white hover:border-zinc-600'
-                      }`}
-                    >
-                      <div className="flex flex-col min-w-0 pr-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-semibold text-zinc-200">{font.name}</span>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/10 text-zinc-400 font-mono">
-                            {font.category}
-                          </span>
-                        </div>
-                        <span
-                          className="text-sm mt-0.5 truncate text-[#FAF8F5]"
-                          style={{ fontFamily: font.cssFamily }}
-                        >
-                          {overlay.text || font.sample}
-                        </span>
-                      </div>
-                      {isSelected && (
-                        <Sparkle className="w-4 h-4 text-[#E5C158] shrink-0 fill-[#E5C158]" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: GLASSMORPHISM PLAQUE */}
-          {textEditorTab === 'glass' && (
-            <div className="space-y-3.5 overflow-y-auto pr-1 max-h-[340px] custom-scrollbar">
-              <div>
-                <label className="block text-[11px] font-semibold text-[#C8A96B] uppercase tracking-wider mb-1.5">
-                  Glassmorphism Card Effect
-                </label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {GLASS_EFFECT_PRESETS.map((preset) => {
-                    const isSelected = (overlay.glassEffect || 'none') === preset.id;
-                    return (
-                      <button
-                        key={preset.id}
-                        onClick={() => handleUpdateText('glassEffect', preset.id)}
-                        className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all relative overflow-hidden ${
-                          isSelected
-                            ? 'border-[#C8A96B] bg-[#C8A96B]/20 text-white font-bold ring-1 ring-[#C8A96B]/60'
-                            : 'border-[#2C2C34] bg-[#121214] text-zinc-400 hover:text-white hover:border-zinc-600'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between w-full mb-1">
-                          <span className="text-xs font-semibold text-white">{preset.name}</span>
-                          <span className="text-[10px]">{preset.badge}</span>
-                        </div>
-                        <p className="text-[10px] text-zinc-400 leading-snug line-clamp-2">
-                          {preset.desc}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Glass Shape & Opacity (Only when glass is active) */}
-              {overlay.glassEffect && overlay.glassEffect !== 'none' && (
-                <div className="p-3 rounded-xl bg-[#121214] border border-[#2C2C34] space-y-3">
-                  {/* Shape Selector */}
-                  <div className="space-y-1.5">
-                    <label className="block text-[10px] font-semibold text-zinc-300 uppercase tracking-wider">
-                      Glass Plaque Shape
-                    </label>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {GLASS_SHAPES.map((shape) => {
-                        const isShapeSelected = (overlay.glassShape || 'pill') === shape.id;
-                        return (
+                  {/* Position, Font Size & Color Quick Controls */}
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/10">
+                    <div>
+                      <label className="block text-[10px] uppercase font-semibold text-zinc-400 mb-1">
+                        Quick Snap Position
+                      </label>
+                      <div className="flex bg-[#121214] border border-[#2C2C34] rounded-xl p-0.5">
+                        {[
+                          { id: 'above', label: 'Top' },
+                          { id: 'inside', label: 'Center' },
+                          { id: 'below', label: 'Bottom' },
+                        ].map((pos) => (
                           <button
-                            key={shape.id}
-                            onClick={() => handleUpdateText('glassShape', shape.id)}
-                            className={`p-1.5 rounded-lg border text-center text-xs flex items-center justify-center gap-1 transition-all ${
-                              isShapeSelected
-                                ? 'border-[#C8A96B] bg-[#C8A96B]/25 text-white font-bold shadow-sm'
-                                : 'border-[#2C2C34] bg-[#18181E] text-zinc-400 hover:text-white'
+                            key={pos.id}
+                            onClick={() => handleUpdateText('position', pos.id)}
+                            className={`flex-1 py-1 text-[10px] font-semibold rounded-lg transition-colors touch-manipulation ${
+                              overlay.position === pos.id &&
+                              overlay.y === (pos.id === 'above' ? 8 : pos.id === 'inside' ? 50 : 90)
+                                ? 'bg-[#C8A96B] text-black font-bold'
+                                : 'text-zinc-400 hover:text-white'
                             }`}
                           >
-                            <span>{shape.icon}</span>
-                            <span className="text-[11px] truncate">{shape.name}</span>
+                            {pos.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] uppercase font-semibold text-zinc-400 mb-1">
+                        Color
+                      </label>
+                      <div className="flex gap-1.5 items-center py-1">
+                        {['#C8A96B', '#FFFFFF', '#E5C158', '#FF758C', '#00F2FE', '#0C0C0E'].map((c) => (
+                          <button
+                            key={c}
+                            onClick={() => handleUpdateText('color', c)}
+                            className={`w-5 h-5 rounded-full border transition-transform touch-manipulation ${
+                              overlay.color === c ? 'scale-125 border-white' : 'border-white/20'
+                            }`}
+                            style={{ backgroundColor: c }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Font Size Slider */}
+                  <div>
+                    <div className="flex justify-between text-[10px] uppercase font-semibold text-zinc-400 mb-1">
+                      <span>Text Size</span>
+                      <span className="font-mono text-[#C8A96B]">{overlay.fontSize || 24}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="14"
+                      max="56"
+                      step="1"
+                      value={overlay.fontSize || 24}
+                      onChange={(e) => handleUpdateText('fontSize', parseInt(e.target.value))}
+                      className="w-full accent-[#C8A96B] cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Text Clarity & Pop Mode */}
+                  <div className="pt-2 border-t border-white/10 space-y-1.5">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="font-semibold text-[#C8A96B] uppercase tracking-wider">
+                        Text Contrast & Pop
+                      </span>
+                      <span className="text-zinc-400 font-mono text-[9px]">100% Legibility</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {TEXT_CLARITY_PRESETS.map((preset) => {
+                        const isSelected = (overlay.textClarity || 'ultra-pop') === preset.id;
+                        return (
+                          <button
+                            key={preset.id}
+                            onClick={() => handleUpdateText('textClarity', preset.id)}
+                            className={`p-2 rounded-xl border text-left flex flex-col justify-between transition-all touch-manipulation ${
+                              isSelected
+                                ? 'border-[#C8A96B] bg-[#C8A96B]/25 text-white font-bold ring-1 ring-[#C8A96B]/60'
+                                : 'border-[#2C2C34] bg-[#121214] text-zinc-400 hover:text-white'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between w-full mb-0.5">
+                              <span className="text-xs font-semibold text-white">{preset.name}</span>
+                              <span className="text-[10px]">{preset.icon}</span>
+                            </div>
+                            <p className="text-[9px] text-zinc-400 leading-snug line-clamp-1">
+                              {preset.desc}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: STYLISH FONTS */}
+              {textEditorTab === 'font' && (
+                <div className="space-y-2 pb-2">
+                  <div className="flex items-center justify-between pb-1">
+                    <span className="text-[11px] text-[#C8A96B] font-semibold">
+                      13 Stylish Signature & Luxury Fonts
+                    </span>
+                    <span className="text-[10px] text-zinc-400">1-Tap Apply</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {STYLISH_FONTS.map((font) => {
+                      const isSelected = (overlay.fontFamily || 'Cinzel, serif') === font.cssFamily;
+                      return (
+                        <button
+                          key={font.id}
+                          onClick={() => handleUpdateText('fontFamily', font.cssFamily)}
+                          className={`p-2 rounded-xl border text-left flex items-center justify-between transition-all touch-manipulation ${
+                            isSelected
+                              ? 'border-[#C8A96B] bg-[#C8A96B]/20 text-white font-bold ring-1 ring-[#C8A96B]/50'
+                              : 'border-[#2C2C34] bg-[#121214] text-zinc-400 hover:text-white hover:border-zinc-600'
+                          }`}
+                        >
+                          <div className="flex flex-col min-w-0 pr-2">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-semibold text-zinc-200">{font.name}</span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/10 text-zinc-400 font-mono">
+                                {font.category}
+                              </span>
+                            </div>
+                            <span
+                              className="text-sm mt-0.5 truncate text-[#FAF8F5]"
+                              style={{ fontFamily: font.cssFamily }}
+                            >
+                              {overlay.text || font.sample}
+                            </span>
+                          </div>
+                          {isSelected && (
+                            <Sparkle className="w-4 h-4 text-[#E5C158] shrink-0 fill-[#E5C158]" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: GLASSMORPHISM PLAQUE */}
+              {textEditorTab === 'glass' && (
+                <div className="space-y-3 pb-2">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-[#C8A96B] uppercase tracking-wider mb-1.5">
+                      Glassmorphism Card Effect
+                    </label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {GLASS_EFFECT_PRESETS.map((preset) => {
+                        const isSelected = (overlay.glassEffect || 'none') === preset.id;
+                        return (
+                          <button
+                            key={preset.id}
+                            onClick={() => handleUpdateText('glassEffect', preset.id)}
+                            className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all relative overflow-hidden touch-manipulation ${
+                              isSelected
+                                ? 'border-[#C8A96B] bg-[#C8A96B]/20 text-white font-bold ring-1 ring-[#C8A96B]/60'
+                                : 'border-[#2C2C34] bg-[#121214] text-zinc-400 hover:text-white hover:border-zinc-600'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between w-full mb-1">
+                              <span className="text-xs font-semibold text-white">{preset.name}</span>
+                              <span className="text-[10px]">{preset.badge}</span>
+                            </div>
+                            <p className="text-[10px] text-zinc-400 leading-snug line-clamp-2">
+                              {preset.desc}
+                            </p>
                           </button>
                         );
                       })}
                     </div>
                   </div>
 
-                  {/* Glass Frosting / Dark Opacity Slider */}
-                  <div className="space-y-1.5 pt-2 border-t border-white/10">
-                    <div className="flex justify-between items-center text-[10px]">
-                      <span className="text-zinc-300 font-semibold uppercase">Plaque Darkness / Opacity</span>
-                      <span className="font-mono text-[#E5C158] font-bold">
-                        {Math.round((overlay.glassOpacity ?? 0.88) * 100)}%
-                      </span>
+                  {/* Glass Shape & Opacity (Only when glass is active) */}
+                  {overlay.glassEffect && overlay.glassEffect !== 'none' && (
+                    <div className="p-3 rounded-xl bg-[#121214] border border-[#2C2C34] space-y-3">
+                      {/* Shape Selector */}
+                      <div className="space-y-1.5">
+                        <label className="block text-[10px] font-semibold text-zinc-300 uppercase tracking-wider">
+                          Glass Plaque Shape
+                        </label>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {GLASS_SHAPES.map((shape) => {
+                            const isShapeSelected = (overlay.glassShape || 'pill') === shape.id;
+                            return (
+                              <button
+                                key={shape.id}
+                                onClick={() => handleUpdateText('glassShape', shape.id)}
+                                className={`p-1.5 rounded-lg border text-center text-xs flex items-center justify-center gap-1 transition-all touch-manipulation ${
+                                  isShapeSelected
+                                    ? 'border-[#C8A96B] bg-[#C8A96B]/25 text-white font-bold shadow-sm'
+                                    : 'border-[#2C2C34] bg-[#18181E] text-zinc-400 hover:text-white'
+                                }`}
+                              >
+                                <span>{shape.icon}</span>
+                                <span className="text-[11px] truncate">{shape.name}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Glass Frosting / Dark Opacity Slider */}
+                      <div className="space-y-1.5 pt-2 border-t border-white/10">
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="text-zinc-300 font-semibold uppercase">Plaque Darkness / Opacity</span>
+                          <span className="font-mono text-[#E5C158] font-bold">
+                            {Math.round((overlay.glassOpacity ?? 0.88) * 100)}%
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0.20"
+                          max="1.0"
+                          step="0.05"
+                          value={overlay.glassOpacity ?? 0.88}
+                          onChange={(e) => handleUpdateText('glassOpacity', parseFloat(e.target.value))}
+                          className="w-full accent-[#C8A96B] cursor-pointer h-1.5"
+                        />
+                        <div className="grid grid-cols-4 gap-1 pt-1">
+                          {[
+                            { label: '50%', val: 0.50 },
+                            { label: '75%', val: 0.75 },
+                            { label: '90%', val: 0.90 },
+                            { label: '100% Solid', val: 1.0 },
+                          ].map((p) => (
+                            <button
+                              key={p.label}
+                              onClick={() => handleUpdateText('glassOpacity', p.val)}
+                              className={`py-1 rounded-md text-[10px] font-semibold border transition-all touch-manipulation ${
+                                Math.abs((overlay.glassOpacity ?? 0.88) - p.val) < 0.04
+                                  ? 'border-[#C8A96B] bg-[#C8A96B]/30 text-white font-bold'
+                                  : 'border-[#2C2C34] bg-[#18181E] text-zinc-400 hover:text-white'
+                              }`}
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <input
-                      type="range"
-                      min="0.20"
-                      max="1.0"
-                      step="0.05"
-                      value={overlay.glassOpacity ?? 0.88}
-                      onChange={(e) => handleUpdateText('glassOpacity', parseFloat(e.target.value))}
-                      className="w-full accent-[#C8A96B] cursor-pointer h-1.5"
-                    />
-                    <div className="grid grid-cols-4 gap-1 pt-1">
-                      {[
-                        { label: '50%', val: 0.50 },
-                        { label: '75%', val: 0.75 },
-                        { label: '90%', val: 0.90 },
-                        { label: '100% Solid', val: 1.0 },
-                      ].map((p) => (
-                        <button
-                          key={p.label}
-                          onClick={() => handleUpdateText('glassOpacity', p.val)}
-                          className={`py-1 rounded-md text-[10px] font-semibold border transition-all ${
-                            Math.abs((overlay.glassOpacity ?? 0.88) - p.val) < 0.04
-                              ? 'border-[#C8A96B] bg-[#C8A96B]/30 text-white font-bold'
-                              : 'border-[#2C2C34] bg-[#18181E] text-zinc-400 hover:text-white'
-                          }`}
-                        >
-                          {p.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
-        </div>
+
+            {/* Quick Done Action Footer for Mobile */}
+            <div className="pt-2 border-t border-white/10 flex items-center justify-end shrink-0">
+              <button
+                onClick={() => setIsEditingText(false)}
+                className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-[#C8A96B] to-[#E5C158] text-black font-bold text-xs rounded-xl shadow-md transition-all touch-manipulation active:scale-95 text-center"
+              >
+                Done & View Canvas
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Selected Tile Inspector Popover */}
@@ -1262,10 +1282,7 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
           onMouseUp={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
           onWheel={(e) => e.stopPropagation()}
-          onTouchStart={(e) => e.stopPropagation()}
-          onTouchMove={(e) => e.stopPropagation()}
-          onTouchEnd={(e) => e.stopPropagation()}
-          className="absolute top-16 right-6 z-40 w-72 rounded-2xl bg-[#1A1A1E]/95 border border-[#C8A96B]/40 p-4 shadow-2xl backdrop-blur-md animate-in fade-in duration-150 text-white space-y-3"
+          className="fixed inset-x-3 bottom-20 sm:bottom-auto sm:top-16 sm:right-6 sm:inset-x-auto sm:w-72 z-40 rounded-2xl bg-[#1A1A1E]/95 border border-[#C8A96B]/40 p-4 shadow-2xl backdrop-blur-md animate-in fade-in duration-150 text-white space-y-3"
         >
           <div className="flex items-center justify-between border-b border-white/10 pb-2">
             <div className="flex items-center gap-2">
@@ -1303,7 +1320,7 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
             <button
               onClick={() => onSetHeroPhoto(selectedPhotoMeta.id)}
-              className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-[#C8A96B]/15 hover:bg-[#C8A96B]/25 text-[#C8A96B] text-xs font-semibold transition-colors"
+              className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-[#C8A96B]/15 hover:bg-[#C8A96B]/25 text-[#C8A96B] text-xs font-semibold transition-colors touch-manipulation active:scale-95"
             >
               <Crown className="w-3.5 h-3.5" />
               <span>Set as Hero</span>
@@ -1319,7 +1336,7 @@ export const MosaicCanvasStage: React.FC<MosaicCanvasStageProps> = ({
                   ];
                 onReplaceTilePhoto(selectedTile.id, nextPhoto.id);
               }}
-              className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-semibold transition-colors"
+              className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-semibold transition-colors touch-manipulation active:scale-95"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Cycle Photo</span>
